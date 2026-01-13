@@ -26,7 +26,7 @@ Both approaches are implemented as **simulation-based research prototypes** with
 
 ## System Architecture
 
-### 1 Graph-Based Spatial Modeling
+### 1. Graph-Based Spatial Modeling
 
 - Urban space is modeled as a **graph**
   - Nodes represent intersections or locations
@@ -34,7 +34,7 @@ Both approaches are implemented as **simulation-based research prototypes** with
 - User movement is represented as paths over the graph
 - Privacy regions are constructed using connected subgraphs
 
-### 2 Privacy Mechanisms
+### 2. Privacy Mechanisms
 
 - **k-Anonymity**: Ensures every reported location is indistinguishable among at least _k_ users
 - **Differential Privacy**: Adds calibrated noise to location coordinates using the Laplace mechanism
@@ -116,24 +116,29 @@ Visual outputs include:
 
 ## Repository Structure
 
+```text
 graph-based-location-privacy-iot/
 │
 ├── README.md
 ├── requirements.txt
 │
-├── k_anonymity_simulation.py
-├── differential_privacy_simulation.py
+├── src/
+│   ├── k_anonymity_simulation.py
+│   └── differential_privacy_simulation.py
 │
-├── simulation_results.json
-├── dp_simulation_results.json
+├── results/
+│   ├── simulation_results.json
+│   └── dp_simulation_results.json
 │
-├── k_anonymity_demo.png
-├── privacy_utility_analysis.png
+├── figures/
+│   ├── k_anonymity_demo.png
+│   ├── privacy_utility_analysis.png
+│   ├── dp_location_obfuscation_demo.png
+│   └── dp_privacy_utility_analysis.png
 │
-├── dp_location_obfuscation_demo.png
-├── dp_privacy_utility_analysis.png
-│
-└── dp_technical_analysis.png
+└── .gitignore
+```
+
 
 ---
 
@@ -145,17 +150,17 @@ graph-based-location-privacy-iot/
 pip install -r requirements.txt
 ```
 
-## Run Graph-Based k-Anonymity Simulation
+# Run Graph-Based k-Anonymity Simulation
 
-### This simulation demonstrates spatial cloaking using graph-based k-anonymity.
+This simulation demonstrates spatial cloaking using graph-based k-anonymity.
 
 ```bash
 python k_anonymity_simulation.py
 ```
 
-## Run Differential Privacy Simulation
+# Run Differential Privacy Simulation
 
-### This simulation demonstrates location obfuscation using differential privacy with the Laplace mechanism.
+This simulation demonstrates location obfuscation using differential privacy with the Laplace mechanism.
 
 ```bash
 python differential_privacy_simulation.py
