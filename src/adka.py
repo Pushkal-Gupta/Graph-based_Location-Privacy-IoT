@@ -108,3 +108,28 @@ plt.ylabel("Region Size (nodes)")
 plt.title("ADKA: k vs Region Size")
 plt.grid(True)
 plt.show()
+
+
+
+# -----------------------------
+# VISUALIZE ONE SAMPLE RUN
+# -----------------------------
+sample_target = random.choice(list(G.nodes()))
+sample_density = compute_density(sample_target)
+sample_k = select_k(sample_density)
+sample_region = expand_region(sample_target, sample_k)
+
+print("\nSample visualization run:")
+print("Target:", sample_target)
+print("Density:", sample_density)
+print("k:", sample_k)
+print("Region:", sample_region)
+
+pos = nx.spring_layout(G)
+
+nx.draw(G, pos, with_labels=True, node_color='lightblue')
+nx.draw_networkx_nodes(G, pos,
+                       nodelist=list(sample_region),
+                       node_color='red')
+plt.title("Sample ADKA Anonymized Region")
+plt.show()
