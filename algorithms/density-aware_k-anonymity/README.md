@@ -1,4 +1,3 @@
-```markdown
 # Adaptive Density-Aware k-Anonymity (ADKA) for Location Privacy in IoT Smart Cities
 
 ## Project Overview
@@ -219,4 +218,5 @@ This work builds on concepts from:
 **Context**: IoT Smart Cities Privacy Research
 
 **Date**: January 2026
+
 
