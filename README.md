@@ -2,16 +2,11 @@
 
 ## Overview
 
-Smart cities rely on large-scale IoT deployments such as smartphones, connected vehicles, cameras, and environmental sensors. These devices continuously generate fine-grained spatial data that can unintentionally reveal sensitive user information such as home locations, workplaces, and mobility patterns.
+Smart cities rely on large-scale IoT deployments such as smartphones, connected vehicles, cameras, and environmental sensors. These devices continuously generate fine-grained spatial data that can unintentionally reveal sensitive user information such as home locations, workplaces, and detailed mobility patterns.
 
-This repository presents **graph-based spatial privacy approaches** to protect location privacy in IoT-enabled smart cities while preserving data utility for urban analytics.
+This repository presents **graph-based spatial privacy approaches** for protecting location privacy in IoT-enabled smart cities while preserving data utility for urban analytics, traffic management, and city-scale decision-making.
 
-The project demonstrates two core privacy-preserving techniques:
-
-1. **Graph-based k-Anonymity**
-2. **Differential Privacy for Location Obfuscation**
-
-Both approaches are implemented as **simulation-based research prototypes** with visual and quantitative privacy–utility analysis.
+The project is implemented as a **completed, research-grade framework** that evaluates multiple spatial privacy-preserving algorithms under a **common simulation and evaluation pipeline**, enabling systematic and reproducible comparison of privacy–utility tradeoffs.
 
 ---
 
@@ -21,6 +16,7 @@ Both approaches are implemented as **simulation-based research prototypes** with
 - Prevent re-identification from spatial and mobility data
 - Preserve usefulness of location data for city-scale analytics
 - Demonstrate privacy–utility tradeoffs using practical simulations
+- Provide a comparative evaluation of spatial privacy mechanisms
 
 ---
 
@@ -29,19 +25,23 @@ Both approaches are implemented as **simulation-based research prototypes** with
 ### Graph-Based Spatial Modeling
 
 - Urban space is modeled as a **graph**
-  - Nodes represent intersections or locations
+  - Nodes represent intersections or significant locations
   - Edges represent roads or connectivity
-- User movement is represented as paths over the graph
-- Privacy regions are constructed using connected subgraphs
+- User locations and movements are represented as paths over the graph
+- Privacy regions are constructed using connected subgraphs or graph-constrained perturbations
 
 ### Privacy Mechanisms
 
 - **k-Anonymity**: Ensures every reported location is indistinguishable among at least _k_ users
-- **Differential Privacy**: Adds calibrated noise to location coordinates using the Laplace mechanism
+- **Differential Privacy**: Adds calibrated noise to location data using formal privacy guarantees
+- **Graph-Constrained Privacy**: Ensures anonymized locations respect urban topology
+- **Density and Temporal Models**: Adapt privacy strength spatially and temporally
 
 ---
 
 ## Implemented Approaches
+
+This repository implements and evaluates **five spatial privacy-preserving algorithms**, all executed under identical datasets, metrics, and attacker assumptions.
 
 ### Approach 1: Graph-Based k-Anonymity
 
@@ -49,25 +49,7 @@ Both approaches are implemented as **simulation-based research prototypes** with
 
 - When a user shares a location, the system finds a connected subgraph containing at least _k_ users
 - The exact location is replaced with the centroid of this region
-- Ensures spatial cloaking while maintaining realistic urban constraints
-
-**Core Components**
-
-- **SmartCityGraph**  
-  Models the urban environment as a graph with intersections and roads.
-
-- **KAnonymityPrivacyManager**  
-  Finds connected subgraphs containing ≥ _k_ users and computes anonymized locations.
-
-- **PrivacyAnalyzer**  
-  Evaluates privacy–utility tradeoffs using quantitative metrics.
-
-**Key Features**
-
-- BFS-based connected subgraph discovery
-- Dynamic k-value evaluation
-- Privacy vs. utility measurement
-- Visual anonymization regions
+- Preserves spatial realism while achieving anonymity
 
 **Key Metrics**
 
@@ -83,30 +65,53 @@ Both approaches are implemented as **simulation-based research prototypes** with
 
 - Adds Laplace noise to (x, y) coordinates before sharing
 - Privacy controlled via the ε (epsilon) parameter
-- Smaller ε → stronger privacy, lower accuracy
+- Smaller ε provides stronger privacy with reduced accuracy
 
-**Key Features**
+---
 
-- Multiple privacy levels (ε = 0.1 to 5.0)
-- Formal statistical privacy guarantees
-- Error distribution and noise analysis
-- Device-type aware evaluation
+### Approach 3: Graph-Constrained Differential Privacy
+
+**Concept**
+
+- Applies differential privacy while constraining noise to valid graph paths
+- Prevents infeasible anonymized locations outside the city topology
+- Improves utility compared to unconstrained coordinate perturbation
+
+---
+
+### Approach 4: Density-Aware Adaptive k-Anonymity
+
+**Concept**
+
+- Dynamically adjusts _k_ based on local user density
+- Reduces unnecessary anonymization in sparse regions
+- Achieves a better privacy–utility balance than fixed-_k_ schemes
+
+---
+
+### Approach 5: Trajectory Privacy via Temporal Cloaking
+
+**Concept**
+
+- Protects user mobility patterns across time
+- Generalizes location updates within temporal windows
+- Mitigates trajectory-based re-identification attacks
 
 ---
 
 ## Privacy–Utility Tradeoff Analysis
 
-Both approaches demonstrate the fundamental tradeoff:
+All approaches demonstrate the fundamental tradeoff:
 
 - **Higher privacy → Lower accuracy**
 - **Lower privacy → Higher utility**
 
-Visual outputs include:
+Evaluation includes:
 
 - Original vs. anonymized locations
-- Privacy region growth with _k_
+- Growth of anonymization regions
 - Location error vs. _k_ / ε
-- Error distributions and noise clouds
+- Noise distributions and trajectory distortion
 
 ---
 
@@ -117,22 +122,39 @@ graph-based-location-privacy-iot/
 │
 ├── README.md
 ├── requirements.txt
+├── LICENSE
 │
-├── src/
-│   ├── k_anonymity_simulation.py
-│   └── differential_privacy_simulation.py
+├── data/
+│   ├── synthetic/
+│   │   ├── city_graph.json
+│   │   └── device_locations.csv
+│   └── README.md
+│
+├── algorithms/
+│   ├── k_anonymity/
+│   ├── differential_privacy/
+│   ├── graph_constrained_dp/
+│   ├── density_aware_k_anonymity/
+│   └── temporal_cloaking/
+│
+├── evaluation/
+│   ├── metrics.py
+│   ├── attacker_models.py
+│   └── evaluator.py
+│
+├── experiments/
+│   ├── run_all.py
+│   └── configs/
 │
 ├── results/
-│   ├── simulation_results.json
-│   └── dp_simulation_results.json
+│   ├── plots/
+│   ├── tables/
+│   └── raw_json/
 │
-├── figures/
-│   ├── k_anonymity_demo.png
-│   ├── privacy_utility_analysis.png
-│   ├── dp_location_obfuscation_demo.png
-│   └── dp_privacy_utility_analysis.png
-│
-└── .gitignore
+└── paper/
+    ├── figures/
+    ├── tables/
+    └── notes.md
 ```
 
 ---
@@ -145,68 +167,157 @@ graph-based-location-privacy-iot/
 pip install -r requirements.txt
 ```
 
-# Run Graph-Based k-Anonymity Simulation
+## Running Individual Simulations
 
-- This simulation demonstrates spatial cloaking using graph-based k-anonymity.
+### 1. Run Graph-Based k-Anonymity Simulation
+
+Demonstrates spatial cloaking using graph-based k-anonymity.
 
 ```bash
 python k_anonymity_simulation.py
 ```
 
-- Outputs
-  - figures/k_anonymity_demo.png
-  - figures/privacy_utility_analysis.png
-  - results/simulation_results.json
+### Outputs
 
-# Run Differential Privacy Simulation
+- `figures/k_anonymity_demo.png`
+- `figures/privacy_utility_analysis.png`
+- `results/simulation_results.json`
 
-- This simulation demonstrates location obfuscation using differential privacy with the Laplace mechanism.
+---
+
+## 2. Run Differential Privacy Simulation
+
+Demonstrates location obfuscation using the Laplace mechanism.
 
 ```bash
 python differential_privacy_simulation.py
 ```
 
-- Outputs
-  - figures/dp_location_obfuscation_demo.png
-  - figures/dp_privacy_utility_analysis.png
-  - results/dp_simulation_results.json
+### Outputs
+
+- `figures/differential_privacy_demo.png`
+- `figures/privacy_utility_analysis.png`
+- `results/simulation_results.json`
+
+---
+
+## 3. Run Graph-Constrained Differential Privacy Simulation
+
+```bash
+python graph_constrained_dp_simulation.py
+```
+
+### Outputs
+
+- `figures/graph_constrained_dp_demo.png`
+- `figures/privacy_utility_analysis.png`
+- `results/simulation_results.json`
+
+---
+
+## 4. Run Density-Aware Adaptive k-Anonymity Simulation
+
+```bash
+python density_aware_k_anonymity_simulation.py
+```
+
+### Outputs
+
+- `figures/density_aware_k_anonymity_demo.png`
+- `figures/privacy_utility_analysis.png`
+- `results/simulation_results.json`
+
+---
+
+## 5. Run Temporal Cloaking Simulation
+
+```bash
+python temporal_cloaking_simulation.py
+```
+
+### Outputs
+
+- `figures/temporal_cloaking_demo.png`
+- `figures/privacy_utility_analysis.png`
+- `results/simulation_results.json`
+
+---
+
+## Running Full Experimental Suite
+
+All algorithms can be executed together using a unified runner:
+
+```bash
+python experiments/run_all.py
+```
+
+---
 
 ## Current Limitations
 
-- Graph-based anonymization can be computationally expensive for large city graphs
-- Higher privacy settings reduce location accuracy
-- Geographic and mobility constraints are simplified
-- Static user distributions are assumed
+- **Computational Complexity**  
+  Graph-based anonymization techniques can be computationally expensive when applied to large-scale graphs or high-density mobility datasets, limiting real-time applicability.
+
+- **Privacy–Utility Trade-off**  
+  Stronger privacy guarantees (higher _k_ in k-anonymity or lower ε in differential privacy) inherently reduce spatial accuracy and utility of the released data.
+
+- **Simplified Geographic and Mobility Constraints**  
+  Road networks, user movement patterns, and geographic constraints are abstracted for simulation purposes and may not fully capture real-world complexity.
+
+- **Synthetic Datasets**  
+  Evaluations are conducted on synthetic datasets to ensure controlled experimentation, which may differ from real-world mobility behavior.
 
 ---
 
 ## Future Directions
 
-- Edge and fog-based privacy computation
-- Adaptive graph models for dynamic mobility
-- Hybrid privacy mechanisms combining k-anonymity and differential privacy
-- AI-driven privacy–utility optimization
-- Integration with real-time IoT sensor streams
+- **Edge and Fog-Based Privacy Computation**  
+  Offloading anonymization and privacy-preserving computations to edge and fog nodes to reduce latency and improve scalability.
+
+- **Adaptive Graph Models for Real-Time Mobility**  
+  Dynamic graph construction and updating to reflect real-time changes in mobility patterns and network topology.
+
+- **Hybrid Privacy Mechanisms**  
+  Combining k-anonymity, differential privacy, temporal cloaking, and graph constraints to achieve stronger and more flexible privacy guarantees.
+
+- **AI-Driven Privacy–Utility Optimization**  
+  Leveraging machine learning and optimization techniques to automatically balance privacy and utility based on application requirements.
+
+- **Integration with Real-World IoT Sensor Streams**  
+  Extending the framework to support live data from GPS-enabled devices, smart city sensors, and mobile IoT platforms.
 
 ---
 
 ## Research Context
 
-This project aligns with research in:
+This project aligns with active research areas including:
 
 - Spatial cloaking
 - Graph-based anonymization
 - Differential privacy
 - Privacy-preserving IoT architectures for smart cities
 
-The repository serves as a **research-oriented, extensible foundation** suitable for academic projects, simulations, and further experimentation.
+The repository is designed as a **research-oriented and extensible foundation**, making it suitable for:
+
+- Academic coursework and capstone projects
+- Simulation-based experimentation
+- Publication-quality empirical research
 
 ---
 
 ## Research Contributions
 
-- Practical implementation of graph-based k-anonymity
-- Differential privacy simulation for spatial data
-- Quantitative privacy–utility evaluation
-- Clear visualization of anonymization effects
-- Modular and extensible research codebase
+- A **comparative framework** for evaluating multiple spatial privacy algorithms
+- Implementations of **graph-based anonymization** and **differential privacy mechanisms**
+- **Quantitative privacy–utility evaluation metrics** for systematic comparison
+- **Clear visualizations** illustrating the effects of anonymization techniques
+- A **modular and extensible codebase** to support further research and experimentation
+
+---
+
+## License
+
+This project is licensed under the **Apache License 2.0**.
+
+You may use, modify, and distribute this software in compliance with the license terms.  
+See the `LICENSE` file for full details.
