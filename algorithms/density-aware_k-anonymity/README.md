@@ -1,6 +1,6 @@
 # Adaptive Density-Aware k-Anonymity for IoT Location Privacy (ADKA)
 
-This project implements Algorithm 4: Adaptive Density-Aware k-Anonymity (ADKA), designed to protect user location privacy in IoT-enabled Smart Cities. Unlike traditional graph-based k-anonymity with a fixed k, ADKA dynamically adjusts the anonymity level based on local user density, achieving a better privacy–utility tradeoff.
+Adaptive Density-Aware k-Anonymity (ADKA) is an algorithm designed to protect user location privacy in IoT-enabled Smart Cities. Unlike traditional graph-based k-anonymity with a fixed k, ADKA dynamically adjusts the anonymity level based on local user density, achieving a better privacy–utility tradeoff.
 
 This approach ensures:
 - Higher privacy in sparse regions
@@ -102,3 +102,4 @@ The multi-run experiment performs 20 anonymization runs using randomly selected 
 - Size of the anonymization region
 
 The generated plots validate that ADKA dynamically adapts k based on density and produces appropriately sized anonymization regions.
+
