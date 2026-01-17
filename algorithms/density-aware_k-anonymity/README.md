@@ -1,4 +1,4 @@
-# 🔐 Adaptive Density-Aware k-Anonymity for IoT Location Privacy (ADKA)
+# Adaptive Density-Aware k-Anonymity for IoT Location Privacy (ADKA)
 
 This project implements **Algorithm 4: Adaptive Density-Aware k-Anonymity (ADKA)**, designed to protect user location privacy in IoT-enabled Smart Cities. Unlike traditional graph-based k-anonymity (fixed k), ADKA **dynamically adjusts the anonymity level (k)** based on the **local population density** around the user.
 
@@ -9,34 +9,34 @@ This ensures:
 
 ---
 
-## ✨ Features
+##  Features
 
-- 📍 Simulated **5×5 smart-city grid graph** using NetworkX  
-- 👥 Random distribution of users across nodes  
-- 📊 Density-aware **adaptive k selection** (k ∈ {2, 5, 10})  
-- 🔄 BFS-based region expansion until ≥ k users are covered  
-- 🎨 Visualization using Matplotlib (red nodes = anonymized region)  
-- 🔬 Support for **multiple-run experiments**  
-- 📈 Plots for:
+-  Simulated **5×5 smart-city grid graph** using NetworkX  
+-  Random distribution of users across nodes  
+-  Density-aware **adaptive k selection** (k ∈ {2, 5, 10})  
+-  BFS-based region expansion until ≥ k users are covered  
+-  Visualization using Matplotlib (red nodes = anonymized region)  
+-  Support for **multiple-run experiments**  
+-  Plots for:
   - Density vs Selected k  
   - k vs Region Size  
 
 ---
 
-## 🧠 Algorithm Overview (ADKA)
+##  Algorithm Overview (ADKA)
 
 ADKA consists of four main stages:
 
-### 1️⃣ Graph Construction  
+###  Graph Construction  
 A 5×5 grid graph models a portion of a smart city.  
 Each node represents an intersection.
 
-### 2️⃣ Density Computation  
+###  Density Computation  
 For a target user, ADKA computes **local density** using BFS:
 
 > Count users at the target node + its 1-hop neighbors.
 
-### 3️⃣ Dynamic k Selection  
+###  Dynamic k Selection  
 Based on density:
 
 if density < 4:
@@ -47,17 +47,17 @@ else:
 k = 2 # high accuracy in high-density regions
 
 
-### 4️⃣ Region Expansion  
+###  Region Expansion  
 Perform BFS from the target node until the region contains at least **k users**.
 
-### 5️⃣ Visualization  
+###  Visualization  
 Red nodes = anonymized region  
 Blue nodes = entire city graph
 
 
 ---
 
-## 📟 Example Terminal Output
+##  Example Terminal Output
 
 Users per node: {0: 2, 1: 0, ..., 24: 1}
 
@@ -75,12 +75,12 @@ This indicates:
 
 ---
 
-## 📊 Example Visualization
+##  Example Visualization
 
 A Matplotlib window will appear showing:
 
-- 🔵 **Blue nodes** → the entire graph  
-- 🔴 **Red nodes** → anonymized region for the target user  
+-  **Blue nodes** → the entire graph  
+-  **Red nodes** → anonymized region for the target user  
 
 Example (conceptual):
 
@@ -91,7 +91,7 @@ Example (conceptual):
 
 ---
 
-## 🔬 Multi-Run Experiment Output (ADKA)
+## Multi-Run Experiment Output (ADKA)
 
 The multi-run experiment produces:
 
