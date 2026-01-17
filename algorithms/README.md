@@ -54,7 +54,7 @@ algorithms/
     ├── temporal_cloaking.py
     ├── README.md
     └── config.yaml
-
+```
 
 Each subdirectory under `algorithms/` represents a self-contained
 location privacy mechanism. Every algorithm follows a consistent structure:
@@ -170,4 +170,7 @@ You may not use this code except in compliance with the License.
 A copy of the License is available at:
 
 http://www.apache.org/licenses/LICENSE-2.0
+
+```
+
 ```
