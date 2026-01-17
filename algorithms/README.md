@@ -157,6 +157,7 @@ pipeline** defined in the root project.
 ## Credits
 
 **Author:** Pushkal Gupta
+
 **Project:** Graph-based Location Privacy for IoT Smart Cities
 
 ---
@@ -169,8 +170,6 @@ This project and all algorithms within this folder are licensed under the
 You may not use this code except in compliance with the License.
 A copy of the License is available at:
 
-http://www.apache.org/licenses/LICENSE-2.0
-
 ```
-
+http://www.apache.org/licenses/LICENSE-2.0
 ```
