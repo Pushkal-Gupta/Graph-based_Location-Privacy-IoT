@@ -25,34 +25,36 @@ format described below.
 
 ## Folder Structure
 
+```text
 algorithms/
 │
-├── **init**.py
+├── __init__.py
 │
 ├── k_anonymity/
-│ ├── k_anonymity.py
-│ ├── README.md
-│ └── config.yaml
+│   ├── k_anonymity.py
+│   ├── README.md
+│   └── config.yaml
 │
 ├── differential_privacy/
-│ ├── laplace_dp.py
-│ ├── README.md
-│ └── config.yaml
+│   ├── laplace_dp.py
+│   ├── README.md
+│   └── config.yaml
 │
 ├── graph_constrained_dp/
-│ ├── graph_constrained_dp.py
-│ ├── README.md
-│ └── config.yaml
+│   ├── graph_constrained_dp.py
+│   ├── README.md
+│   └── config.yaml
 │
 ├── density_aware_k_anonymity/
-│ ├── density_aware_k.py
-│ ├── README.md
-│ └── config.yaml
+│   ├── density_aware_k.py
+│   ├── README.md
+│   └── config.yaml
 │
 └── temporal_cloaking/
-├── temporal_cloaking.py
-├── README.md
-└── config.yaml
+    ├── temporal_cloaking.py
+    ├── README.md
+    └── config.yaml
+
 
 Each subdirectory under `algorithms/` represents a self-contained
 location privacy mechanism. Every algorithm follows a consistent structure:
@@ -154,17 +156,18 @@ pipeline** defined in the root project.
 
 ## Credits
 
-**Author:** Pushkal Gupta  
+**Author:** Pushkal Gupta
 **Project:** Graph-based Location Privacy for IoT Smart Cities
 
 ---
 
 ## License
 
-This project and all algorithms within this folder are licensed under the  
+This project and all algorithms within this folder are licensed under the
 **Apache License, Version 2.0**.
 
-You may not use this code except in compliance with the License.  
+You may not use this code except in compliance with the License.
 A copy of the License is available at:
 
 http://www.apache.org/licenses/LICENSE-2.0
+```
