@@ -43,6 +43,8 @@ The project is implemented as a **completed, research-grade framework** that eva
 
 This repository implements and evaluates **five spatial privacy-preserving algorithms**, all executed under identical datasets, metrics, and attacker assumptions.
 
+---
+
 ### Approach 1: Graph-Based k-Anonymity
 
 **Concept**
@@ -123,6 +125,7 @@ graph-based-location-privacy-iot/
 ├── README.md
 ├── requirements.txt
 ├── LICENSE
+├── .gitignore
 │
 ├── data/
 │   ├── synthetic/
@@ -183,8 +186,6 @@ python k_anonymity_simulation.py
 - `figures/privacy_utility_analysis.png`
 - `results/simulation_results.json`
 
----
-
 ## 2. Run Differential Privacy Simulation
 
 Demonstrates location obfuscation using the Laplace mechanism.
@@ -199,8 +200,6 @@ python differential_privacy_simulation.py
 - `figures/privacy_utility_analysis.png`
 - `results/simulation_results.json`
 
----
-
 ## 3. Run Graph-Constrained Differential Privacy Simulation
 
 ```bash
@@ -213,8 +212,6 @@ python graph_constrained_dp_simulation.py
 - `figures/privacy_utility_analysis.png`
 - `results/simulation_results.json`
 
----
-
 ## 4. Run Density-Aware Adaptive k-Anonymity Simulation
 
 ```bash
@@ -226,8 +223,6 @@ python density_aware_k_anonymity_simulation.py
 - `figures/density_aware_k_anonymity_demo.png`
 - `figures/privacy_utility_analysis.png`
 - `results/simulation_results.json`
-
----
 
 ## 5. Run Temporal Cloaking Simulation
 
