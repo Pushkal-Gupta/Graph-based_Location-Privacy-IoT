@@ -132,7 +132,7 @@ pip install networkx matplotlib
 ### Running the Simulation
 
 ```bash
-python density_aware_k_anonymity.py
+python density_aware_k_anonymity_simulation.py
 
 ```
 
@@ -220,3 +220,4 @@ This work builds on concepts from:
 **Context**: IoT Smart Cities Privacy Research
 
 **Date**: January 2026
+
