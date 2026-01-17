@@ -215,8 +215,8 @@ This work builds on concepts from:
 
 ---
 
-**Author**: Praagya Garg
-**Context**: IoT Smart Cities Privacy Research
+**Author**: Praagya Garg  
+**Context**: IoT Smart Cities Privacy Research  
 **Date**: January 2026
 
 
