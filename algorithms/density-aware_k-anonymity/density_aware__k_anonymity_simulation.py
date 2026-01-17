@@ -42,11 +42,11 @@ class SmartCityGraph:
 
 
 # ======================================================================
-# Density-Aware Adaptive k-Anonymity Algorithm
+# Density-Aware k-Anonymity Algorithm
 # ======================================================================
 
-class DensityAwareAdaptiveKAnonymityAlgorithm:
-    """Implementation of the Density-Aware Adaptive k-Anonymity (DAAKA) logic."""
+class DensityAwareKAnonymityAlgorithm:
+    """Implementation of the Density-Aware k-Anonymity logic."""
 
     def __init__(self, city: SmartCityGraph):
         self.city = city
@@ -107,13 +107,13 @@ class DensityAwareAdaptiveKAnonymityAlgorithm:
 
 
 # ======================================================================
-# Density-Aware Adaptive k-Anonymity Experiment Manager
+# Density-Aware k-Anonymity Experiment Manager
 # ======================================================================
 
-class DensityAwareAdaptiveKAnonymityExperiment:
-    """Runs the Density-Aware Adaptive k-Anonymity simulation multiple times."""
+class DensityAwareKAnonymityExperiment:
+    """Runs the Density-Aware k-Anonymity simulation multiple times."""
 
-    def __init__(self, algorithm: DensityAwareAdaptiveKAnonymityAlgorithm, runs: int = 20):
+    def __init__(self, algorithm: DensityAwareKAnonymityAlgorithm, runs: int = 20):
         self.algorithm = algorithm
         self.city = algorithm.city
         self.runs = runs
@@ -123,7 +123,7 @@ class DensityAwareAdaptiveKAnonymityExperiment:
         self.region_sizes: List[int] = []
 
     def run_simulation(self):
-        print("\n====== Running Density-Aware Adaptive k-Anonymity Experiment ======\n")
+        print("\n====== Running Density-Aware k-Anonymity Experiment ======\n")
         for i in range(self.runs):
             target = random.choice(list(self.city.graph.nodes()))
 
@@ -154,11 +154,11 @@ class DensityAwareAdaptiveKAnonymityExperiment:
 
 
 # ======================================================================
-# Density-Aware Adaptive k-Anonymity Visualization
+# Density-Aware k-Anonymity Visualization
 # ======================================================================
 
-class DensityAwareAdaptiveKAnonymityViz:
-    """Visualization suite for the Density-Aware Adaptive k-Anonymity results."""
+class DensityAwareKAnonymityViz:
+    """Visualization suite for the Density-Aware k-Anonymity results."""
 
     @staticmethod
     def ensure_results_folder():
@@ -166,32 +166,32 @@ class DensityAwareAdaptiveKAnonymityViz:
             os.makedirs("results")
 
     @staticmethod
-    def plot_density_vs_adaptive_k(density, k):
-        DensityAwareAdaptiveKAnonymityViz.ensure_results_folder()
+    def plot_density_vs_k(density, k):
+        DensityAwareKAnonymityViz.ensure_results_folder()
         plt.figure()
         plt.scatter(density, k, color="darkblue")
         plt.xlabel("Local Density")
-        plt.ylabel("Selected Adaptive k")
-        plt.title("Density-Aware Adaptive k-Anonymity: Density vs k")
+        plt.ylabel("Selected k")
+        plt.title("Density-Aware k-Anonymity: Density vs k")
         plt.grid(True)
         plt.savefig("results/density_vs_k.png", dpi=300)
         plt.show()
 
     @staticmethod
     def plot_k_vs_region_size(k, region_size):
-        DensityAwareAdaptiveKAnonymityViz.ensure_results_folder()
+        DensityAwareKAnonymityViz.ensure_results_folder()
         plt.figure()
         plt.scatter(k, region_size, color="green")
-        plt.xlabel("Selected Adaptive k")
+        plt.xlabel("Selected k")
         plt.ylabel("Anonymization Region Size (nodes)")
-        plt.title("Density-Aware Adaptive k-Anonymity: k vs Region Size")
+        plt.title("Density-Aware k-Anonymity: k vs Region Size")
         plt.grid(True)
         plt.savefig("results/k_vs_region_size.png", dpi=300)
         plt.show()
 
     @staticmethod
     def visualize_specific_region(city: SmartCityGraph, region: Set[int], target: int, density: int, k: int):
-        DensityAwareAdaptiveKAnonymityViz.ensure_results_folder()
+        DensityAwareKAnonymityViz.ensure_results_folder()
 
         pos = city.positions
         plt.figure(figsize=(7, 7))
@@ -205,7 +205,7 @@ class DensityAwareAdaptiveKAnonymityViz:
         nx.draw_networkx_nodes(city.graph, pos, nodelist=[target], node_color="yellow")
 
         plt.title(
-            f"Density-Aware Adaptive k-Anonymity Region\nTarget={target}, Density={density}, k={k}, Region Size={len(region)}"
+            f"Density-Aware k-Anonymity Region\nTarget={target}, Density={density}, k={k}, Region Size={len(region)}"
         )
         plt.savefig("results/region_visualization.png", dpi=300)
         plt.show()
@@ -218,20 +218,20 @@ class DensityAwareAdaptiveKAnonymityViz:
 def main():
     # 1. Initialize the City and the Algorithm
     smart_city = SmartCityGraph(grid_size=5, num_users=30, seed=0)
-    algorithm = DensityAwareAdaptiveKAnonymityAlgorithm(smart_city)
+    algorithm = DensityAwareKAnonymityAlgorithm(smart_city)
 
     # 2. Run the Experiment
-    experiment_manager = DensityAwareAdaptiveKAnonymityExperiment(algorithm, runs=20)
+    experiment_manager = DensityAwareKAnonymityExperiment(algorithm, runs=20)
     density_data, k_data, size_data = experiment_manager.run_simulation()
 
     # 3. Print Summary Statistics
-    print("=== Density-Aware Adaptive k-Anonymity Summary ===")
+    print("=== Density-Aware k-Anonymity Summary ===")
     for key, value in experiment_manager.get_experiment_summary().items():
         print(f"{key}: {value:.2f}")
 
     # 4. Generate Analytics Plots
-    DensityAwareAdaptiveKAnonymityViz.plot_density_vs_adaptive_k(density_data, k_data)
-    DensityAwareAdaptiveKAnonymityViz.plot_k_vs_region_size(k_data, size_data)
+    DensityAwareKAnonymityViz.plot_density_vs_k(density_data, k_data)
+    DensityAwareKAnonymityViz.plot_k_vs_region_size(k_data, size_data)
 
     # 5. Visualize a Sample Run
     sample_node = random.choice(list(smart_city.graph.nodes()))
@@ -239,7 +239,7 @@ def main():
     sample_k = algorithm.select_adaptive_k(sample_density)
     sample_region = algorithm.expand_anonymization_region(sample_node, sample_k)
     
-    DensityAwareAdaptiveKAnonymityViz.visualize_specific_region(
+    DensityAwareKAnonymityViz.visualize_specific_region(
         smart_city, sample_region, sample_node, sample_density, sample_k
     )
 
