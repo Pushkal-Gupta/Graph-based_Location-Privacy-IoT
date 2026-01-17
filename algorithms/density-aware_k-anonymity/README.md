@@ -1,11 +1,12 @@
+```markdown
 # Adaptive Density-Aware k-Anonymity (ADKA) for Location Privacy in IoT Smart Cities
 
 ## Project Overview
 
-This project implements **Algorithm 4: Adaptive Density-Aware k-Anonymity (ADKA)** for ensuring user location privacy in IoT-enabled smart cities.  
-Unlike traditional graph-based k-anonymity, which uses a fixed k, ADKA dynamically adjusts the anonymity parameter based on local user density, providing an improved privacy–utility tradeoff.
+This project implements **Adaptive Density-Aware k-Anonymity (ADKA)** for ensuring user location privacy in **IoT-enabled smart cities**.  
+Unlike traditional graph-based k-anonymity, which uses a fixed k, ADKA dynamically adjusts the anonymity parameter based on local user density, providing an improved **privacy–utility tradeoff**.
 
-The system models an urban environment as a grid-based graph and generalizes user locations into **connected anonymization regions** that contain at least *k* users, where k is chosen adaptively.
+The objective is to generalize user locations into **connected anonymization regions** that contain at least *k* users, where k is chosen adaptively based on the local environment.
 
 ---
 
@@ -13,56 +14,32 @@ The system models an urban environment as a grid-based graph and generalizes use
 
 ### Core Components
 
----
-
-### 1. Smart-City Graph Model
-
+#### 1. Smart-City Graph Model
 Models the smart city as a graph:
+- Nodes represent intersections or discrete locations
+- Edges represent road connectivity
+- Users are randomly distributed across nodes
+- Provides a simplified urban layout for evaluating privacy mechanisms
 
-- Nodes represent intersections  
-- Edges represent road connectivity  
-- Users are randomly placed across nodes  
+#### 2. ADKA Density Module
+Computes local neighborhood density using BFS (depth = 1):
+- Counts users at the target node and its 1-hop neighbors
+- Determines if the region is sparse, medium, or dense
+- Serves as the basis for adaptive privacy selection
 
-This creates a simplified urban layout suitable for evaluating location privacy mechanisms.
+#### 3. Adaptive k Selector
+Chooses the anonymity level *k* based on density thresholds:
+- If density < 4: **k = 10**
+- Elif density < 10: **k = 5**
+- Else: **k = 2**
+- Provides **context-aware privacy adaptation**
 
----
-
-### 2. ADKA Density Module
-
-Computes local neighborhood density using BFS depth = 1:
-
-- Counts users at the target node  
-- Counts users at 1-hop neighbors  
-- Determines if the region is sparse, medium, or dense  
-
----
-
-### 3. Adaptive k Selector
-
-Chooses the anonymity level *k* based on density:
-
-if density < 4:
-k = 10
-elif density < 10:
-k = 5
-else:
-k = 2
-
-
-This provides **context-aware privacy adaptation**.
-
----
-
-### 4. Region Expansion Module
-
-Implements BFS-based region growth:
-
-- Starts from the target node  
-- Expands to neighbors  
-- Accumulates users  
-- Stops when total users ≥ k  
-
-Produces a connected anonymization region.
+#### 4. Region Expansion Module
+Implements the graph-based growth logic:
+- Starts from the target user's node
+- Expands a connected subgraph using Breadth-First Search (BFS)
+- Stops when the region contains at least *k* users
+- Returns the final connected anonymization region
 
 ---
 
@@ -70,79 +47,72 @@ Produces a connected anonymization region.
 
 ### Algorithm Outline
 
-For each target user:
+```text
+For each target user query:
+1. Compute local density using BFS (depth = 1)
+2. Select adaptive k value based on density thresholds
+3. Initialize an anonymization region with the target node
+4. Perform BFS to expand to neighboring nodes
+5. Accumulate users in the growing region
+6. Stop when region contains ≥ k users
+7. Return the connected subgraph as the anonymized location
 
-Compute local density (BFS depth = 1)
-
-Select k based on density thresholds
-
-Initialize region with target node
-
-Expand region using BFS
-
-Accumulate users
-
-Stop when users ≥ k
-
-Return anonymized region
-
-
----
+```
 
 ## Key Properties
 
-- k adapts automatically based on density  
-- Ensures stronger privacy in sparse areas  
-- Maintains higher accuracy in dense areas  
-- Always produces connected regions  
-- Lightweight and efficient for IoT graphs  
+* Privacy levels adapt automatically based on local density
+* Regions are always guaranteed to be connected subgraphs
+* Ensures stronger privacy in sparse areas and higher accuracy in dense areas
+* Lightweight and efficient for IoT-scale graph processing
 
 ---
 
 ## Implementation Features
 
-- Density-aware adaptive k selection  
-- BFS-based anonymization region expansion  
-- 20-run experimental evaluation  
-- Three visualization outputs:
-  1. Density vs Selected k  
-  2. Selected k vs Region Size  
-  3. Graph-based anonymization region visualization  
-- Easy-to-understand modular Python code  
+* Density-aware adaptive k-selection logic
+* BFS-based anonymization region expansion
+* 20-run experimental evaluation pipeline
+* Automated visualization of density, k-values, and regions
+* Modular and extensible Python codebase
 
 ---
 
 ## ADKA Experiment Results
 
-### Multi-Run Output Example
+### Performance Metrics (Sample Output)
 
-Run 1: Target=7, Density=3, k=10, Region Size=11
-Run 2: Target=22, Density=6, k=5, Region Size=2
-Run 3: Target=16, Density=10, k=2, Region Size=1
-
+| Run ID | Target Node | Local Density | Selected k | Region Size (Nodes) |
+| --- | --- | --- | --- | --- |
+| Run 1 | 7 | 3 (Low) | 10 | 11 |
+| Run 2 | 22 | 6 (Med) | 5 | 2 |
+| Run 3 | 16 | 10 (High) | 2 | 1 |
 
 ### Observations
 
-- Low density ⇒ k = 10 ⇒ larger regions  
-- Medium density ⇒ k = 5 ⇒ mid-sized regions  
-- High density ⇒ k = 2 ⇒ minimal region size  
-- Scatter plots confirm correct adaptive behavior  
+* **Inverse Correlation:** As local density increases, the required k-value decreases
+* **Privacy Scaling:** Low density leads to k = 10 and larger anonymization regions
+* **Utility Preservation:** High density allows for k = 2 and minimal region sizes
+* **Consistency:** Scatter plots confirm correct adaptive behavior across runs
 
 ---
 
 ## Visualization Outputs
 
-### 1. Density vs Selected k
-Shows how k decreases as local density increases.
+### 1. Density vs. Selected k
 
-### 2. Selected k vs Region Size
-Illustrates how region size grows with larger values of k.
+Shows how the anonymity requirement decreases as local user density increases.
+
+### 2. Selected k vs. Region Size
+
+Illustrates how the physical region size grows to accommodate larger privacy requirements.
 
 ### 3. Anonymized Region Visualization
-Displays the graph where:
 
-- Blue nodes = full grid  
-- Red nodes = anonymized region  
+Displays the graph connectivity with specific highlighting:
+
+* **Blue Nodes:** General city grid
+* **Red Nodes:** Anonymized privacy region
 
 ---
 
@@ -150,23 +120,25 @@ Displays the graph where:
 
 ### Prerequisites
 
+```bash
 pip install networkx matplotlib
 
+```
 
-### Run the Program
+### Running the Simulation
 
+```bash
 python adka.py
 
-
----
+```
 
 ## Generated Visual Outputs
 
 Running the algorithm will display three figures:
 
-- Density vs Selected k  
-- Selected k vs Region Size  
-- Graph visualization of anonymized region  
+* density_vs_k_plot
+* k_vs_region_size_plot
+* graph_region_visualization
 
 ---
 
@@ -174,63 +146,77 @@ Running the algorithm will display three figures:
 
 ### Graph Model
 
-- 5 × 5 grid city graph  
-- Undirected connectivity  
-- Random user placement  
+* 5 × 5 Grid-based city model
+* Undirected road connectivity
+* Random user placement across nodes
 
 ### Privacy Computation
 
-- Dynamic k selection  
-- BFS-based region expansion  
-- Connected region guarantee  
+* Dynamic k-selection thresholds
+* Breadth-First Search region expansion
+* Connected region topological guarantee
 
 ### Metrics Collected
 
-- Local density  
-- k value  
-- Region size  
+* Local neighborhood density (1-hop)
+* Adaptive k-value distribution
+* Resulting region node count
 
 ---
 
 ## Current Limitations
 
-- Small grid size  
-- Static users (no mobility model)  
-- BFS limited to depth 1 for density estimation  
-- No coordinate-level error metric  
+### Scale and Complexity
+
+* Small grid size (5x5) limits complex topology testing
+* BFS density estimation limited to 1-hop depth
+
+### Modeling Constraints
+
+* Static user model (no mobility or temporal correlations)
+* Absence of coordinate-level Euclidean error metrics
 
 ---
 
 ## Future Work
 
-- Multi-hop density estimation  
-- Integration with fixed-k algorithms  
-- Differential privacy extensions  
-- Mobility-aware anonymization  
-- Real-world IoT deployment models  
+### Algorithmic Extensions
+
+* Multi-hop density estimation for smoother adaptation
+* Integration with Differential Privacy frameworks
+* Mobility-aware anonymization for continuous trajectories
+
+### System Integration
+
+* Real-world IoT deployment models
+* Hybrid models combining fixed-k and adaptive-k approaches
+* Performance optimization for large-scale city graphs
 
 ---
 
 ## Research Contributions
 
-- First implementation of ADKA for IoT smart cities  
-- Demonstrates adaptive k selection based on density  
-- Provides clear visualization and empirical evaluation  
-- Establishes a reusable foundation for future privacy frameworks  
+* Practical implementation of the ADKA framework for IoT smart cities
+* Empirical demonstration of density-based privacy–utility optimization
+* Integrated visualization suite for privacy behavior analysis
+* Reusable foundation for future adaptive privacy research
 
 ---
 
 ## References and Context
 
-This work builds upon concepts from:
+This work builds on concepts from:
 
-- Graph-based anonymization  
-- Spatial cloaking  
-- IoT location privacy  
-- Privacy–utility optimization  
+* Graph-based anonymization
+* Spatial cloaking
+* IoT location privacy
+* Privacy–utility tradeoff analysis
 
 ---
 
 **Author**: Praagya Garg
-**Context**: IoT Smart Cities Privacy Research  
+
+**Context**: IoT Smart Cities Privacy Research
+
 **Date**: January 2026
+
