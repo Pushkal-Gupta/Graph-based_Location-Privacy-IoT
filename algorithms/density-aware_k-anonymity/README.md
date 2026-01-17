@@ -1,63 +1,65 @@
 # Adaptive Density-Aware k-Anonymity for IoT Location Privacy (ADKA)
 
-This project implements **Algorithm 4: Adaptive Density-Aware k-Anonymity (ADKA)**, designed to protect user location privacy in IoT-enabled Smart Cities. Unlike traditional graph-based k-anonymity (fixed k), ADKA **dynamically adjusts the anonymity level (k)** based on the **local population density** around the user.
+This project implements Algorithm 4: Adaptive Density-Aware k-Anonymity (ADKA), designed to protect user location privacy in IoT-enabled Smart Cities. Unlike traditional graph-based k-anonymity with a fixed k, ADKA dynamically adjusts the anonymity level based on local user density, achieving a better privacy–utility tradeoff.
 
-This ensures:
-- Higher privacy in **sparse** areas  
-- Higher accuracy in **dense** areas  
-- Better overall **privacy–utility tradeoff**
-
----
-
-##  Features
-
--  Simulated **5×5 smart-city grid graph** using NetworkX  
--  Random distribution of users across nodes  
--  Density-aware **adaptive k selection** (k ∈ {2, 5, 10})  
--  BFS-based region expansion until ≥ k users are covered  
--  Visualization using Matplotlib (red nodes = anonymized region)  
--  Support for **multiple-run experiments**  
--  Plots for:
-  - Density vs Selected k  
-  - k vs Region Size  
+This approach ensures:
+- Higher privacy in sparse regions
+- Higher spatial accuracy in dense regions
+- Context-aware anonymization
 
 ---
 
-##  Algorithm Overview (ADKA)
+## Features
 
-ADKA consists of four main stages:
+- Simulated 5×5 smart-city grid graph using NetworkX  
+- Random distribution of users across graph nodes  
+- Density-aware adaptive k selection (k ∈ {2, 5, 10})  
+- BFS-based region expansion until at least k users are included  
+- Support for multiple-run experiments  
+- Three types of visual outputs generated using Matplotlib:
+  1. Density vs Selected k plot
+  2. Selected k vs Region Size plot
+  3. Graph-based visualization of the anonymized region
 
-###  Graph Construction  
-A 5×5 grid graph models a portion of a smart city.  
-Each node represents an intersection.
+---
 
-###  Density Computation  
-For a target user, ADKA computes **local density** using BFS:
+## Algorithm Overview
 
-> Count users at the target node + its 1-hop neighbors.
+Adaptive Density-Aware k-Anonymity (ADKA) consists of the following stages:
 
-###  Dynamic k Selection  
-Based on density:
+### Graph Construction
+A 5×5 grid graph is used to represent a smart city layout, where each node corresponds to a road intersection.
+
+### Density Computation
+For a given target user, local density is computed using breadth-first search with depth 1:
+- Users at the target node
+- Users at immediate neighboring nodes
+
+### Adaptive k Selection
+The anonymity parameter k is selected based on the computed density:
 
 if density < 4:
-k = 10 # high privacy in low-density regions
+k = 10
 elif density < 10:
-k = 5 # medium privacy in medium-density regions
+k = 5
 else:
-k = 2 # high accuracy in high-density regions
+k = 2
 
 
-###  Region Expansion  
-Perform BFS from the target node until the region contains at least **k users**.
+### Region Expansion
+The anonymization region is constructed by expanding outward from the target node using BFS until the total number of users in the region is at least k.
 
-###  Visualization  
-Red nodes = anonymized region  
-Blue nodes = entire city graph
-
+### Visualization Outputs
+The algorithm produces three visual outputs:
+1. A scatter plot showing Density vs Selected k
+2. A scatter plot showing Selected k vs Region Size
+3. A graph-based visualization of the city graph where:
+   - Blue nodes represent the entire city graph
+   - Red nodes represent the anonymized region for a sample target user
 
 ---
 
-##  Example Terminal Output
+## Example Terminal Output
 
 Users per node: {0: 2, 1: 0, ..., 24: 1}
 
@@ -67,39 +69,36 @@ Selected k: 5
 Output region: {2, 6, 7, 12}
 
 
-This indicates:
-- Target user is at node 7  
-- Local density = 6  
-- ADKA selected k = 5  
-- The anonymized region includes nodes {2, 6, 7, 12}  
+This output indicates:
+- The target user is located at node 7
+- The local neighborhood density is 6
+- ADKA selects k = 5
+- The anonymized region contains nodes {2, 6, 7, 12}
 
 ---
 
-##  Example Visualization
+## Visualization Results
 
-A Matplotlib window will appear showing:
+When the program is executed, the following figures are displayed sequentially:
 
--  **Blue nodes** → the entire graph  
--  **Red nodes** → anonymized region for the target user  
+1. Density vs Selected k  
+   This plot illustrates how the anonymity parameter k decreases as local user density increases.
 
-Example (conceptual):
+2. Selected k vs Region Size  
+   This plot shows the relationship between the chosen k value and the size of the anonymization region in terms of graph nodes.
 
-[0] -- [1] -- [2] ← part of connected anonymized region
-|
-[7] ← target user
-
+3. Anonymized Region Visualization  
+   This figure displays the smart-city graph with the anonymized region highlighted:
+   - Blue nodes represent the entire graph
+   - Red nodes represent the anonymization region for a selected target user
 
 ---
 
-## Multi-Run Experiment Output (ADKA)
+## Multi-Run Experiment Description
 
-The multi-run experiment produces:
+The multi-run experiment performs 20 anonymization runs using randomly selected target users. For each run, the following are recorded:
+- Local density
+- Selected k value
+- Size of the anonymization region
 
-- 20 random target selections  
-- Density, k, and region size per run  
-- Two plots:
-  - **Density vs Selected k**
-  - **Selected k vs Region Size**
-
-These validate the adaptive behavior of ADKA.
-
+The generated plots validate that ADKA dynamically adapts k based on density and produces appropriately sized anonymization regions.
