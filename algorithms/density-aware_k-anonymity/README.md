@@ -1,9 +1,9 @@
-# Density-Aware Adaptive k-Anonymity for Location Privacy in IoT Smart Cities
+# Density-Aware k-Anonymity for Location Privacy in IoT Smart Cities
 
 ## Project Overview
 
-This project implements **Density-Aware Adaptive k-Anonymity** for ensuring user location privacy in **IoT-enabled smart cities**.  
-Unlike traditional graph-based k-anonymity, which uses a fixed k, Density-Aware Adaptive k-Anonymity dynamically adjusts the anonymity parameter based on local user density, providing an optimized **privacy–utility tradeoff**.
+This project implements **Density-Aware k-Anonymity** for ensuring user location privacy in **IoT-enabled smart cities**.  
+Unlike traditional graph-based k-anonymity, which uses a fixed k, Density-Aware k-Anonymity dynamically adjusts the anonymity parameter based on local user density, providing an optimized **privacy–utility tradeoff**.
 
 The system models an urban environment as a grid-based graph and generalizes user locations into **connected anonymization regions** that contain at least *k* users, where k is chosen adaptively based on the local spatial context.
 
@@ -19,19 +19,19 @@ Models the smart city as a 2D grid graph:
 - Randomly distributes a configurable number of users across nodes
 - Maintains spatial coordinates for realistic visualization and distance metrics
 
-#### 2. Density-Aware Adaptive k-Anonymity Algorithm
+#### 2. Density-Aware k-Anonymity Algorithm
 The core logic engine for density-aware privacy:
 - **Density Computation:** Uses BFS (depth=1) to count users in a node's immediate neighborhood
 - **Adaptive k Selector:** Maps neighborhood density to privacy levels (k=10 for sparse, k=5 for medium, k=2 for dense)
 - **Region Expansion:** Grows a connected subgraph until the required *k* users are reached
 
-#### 3. Density-Aware Adaptive k-Anonymity Experiment
+#### 3. Density-Aware k-Anonymity Experiment
 An experiment management layer that:
 - Orchestrates multiple simulation runs (default: 20 runs)
 - Collects statistical data on densities, k-values, and resulting region sizes
 - Provides summary metrics including average region size and min/max bounds
 
-#### 4. Density-Aware Adaptive k-Anonymity Visualization
+#### 4. Density-Aware k-Anonymity Visualization
 A dedicated visualization suite that:
 - Generates scatter plots for privacy–utility analysis
 - Produces spatial graph plots highlighting the target user and the anonymized region
@@ -39,7 +39,7 @@ A dedicated visualization suite that:
 
 ---
 
-## Density-Aware Adaptive k-Anonymity Algorithm
+## Density-Aware k-Anonymity Algorithm
 
 ### Algorithm Outline
 
@@ -71,12 +71,12 @@ For each user query:
 * Object-oriented architecture (City, Algorithm, Experiment, and Visualization classes)
 * Automated result export to local `results/` folder
 * Configurable simulation parameters (grid size, user count, random seed)
-* Multi-run statistical analysis pipeline for Density-Aware Adaptive k-Anonymity
+* Multi-run statistical analysis pipeline for Density-Aware k-Anonymity
 * High-fidelity visualization of spatial anonymization regions
 
 ---
 
-## Density-Aware Adaptive k-Anonymity Experiment Results
+## Density-Aware k-Anonymity Experiment Results
 
 ### Performance Metrics (Example Output)
 
@@ -104,7 +104,7 @@ A scatter plot demonstrating the inverse relationship between local density and 
 
 ### 2. Selected k vs. Region Size
 
-Visualizes how the physical area of the privacy region scales with the chosen k-value in the Density-Aware Adaptive k-Anonymity framework.
+Visualizes how the physical area of the privacy region scales with the chosen k-value in the Density-Aware k-Anonymity framework.
 
 **Output file:** `results/k_vs_region_size.png`
 
@@ -132,7 +132,7 @@ pip install networkx matplotlib
 ### Running the Simulation
 
 ```bash
-python density_aware_adaptive_k_anonymity.py
+python density_aware_k_anonymity.py
 
 ```
 
@@ -184,7 +184,7 @@ python density_aware_adaptive_k_anonymity.py
 
 ### Algorithmic Extensions
 
-* Implementation of l-diversity and t-closeness on top of Density-Aware Adaptive k-Anonymity
+* Implementation of l-diversity and t-closeness on top of Density-Aware k-Anonymity
 * Adaptive BFS depth for density estimation
 * Differential privacy integration for edge weights
 
@@ -198,7 +198,7 @@ python density_aware_adaptive_k_anonymity.py
 
 ## Research Contributions
 
-* Modular OOP framework for Density-Aware Adaptive k-Anonymity research
+* Modular OOP framework for Density-Aware k-Anonymity research
 * Empirical validation of density-aware privacy selection
 * Automated visualization and data collection pipeline
 * Extensible baseline for IoT location privacy in smart cities
@@ -220,9 +220,3 @@ This work builds on concepts from:
 **Context**: IoT Smart Cities Privacy Research
 
 **Date**: January 2026
-
-```
-
-Would you like me to help you adjust the `classify_density` or `select_k` thresholds in your code to see how it impacts the "Average Region Size" in the experiment results?
-
-```
