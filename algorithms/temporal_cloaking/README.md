@@ -183,13 +183,13 @@ pip install numpy matplotlib networkx pillow
 ### Running the Simulation
 
 ```bash
-python temporal_cloaking_simulation.py
+python3 temporal_cloaking_simulation.py
 ```
 
 ### Command Line Options
 
 ```bash
-python temporal_cloaking_simulation.py --users 50 --window 30 --k 3 --duration 48
+python3 temporal_cloaking_simulation.py --users 50 --window 30 --k 3 --duration 48
 ```
 
 Parameters:

@@ -155,7 +155,7 @@ pip install networkx matplotlib numpy
 ### Running the Simulation
 
 ```bash
-python graph_constrained_dp_simulation.py
+python3 graph_constrained_dp_simulation.py
 ```
 
 ## Generated Files

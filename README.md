@@ -177,7 +177,7 @@ pip install -r requirements.txt
 Demonstrates spatial cloaking using graph-based k-anonymity.
 
 ```bash
-python k_anonymity_simulation.py
+python3 k_anonymity_simulation.py
 ```
 
 ### Outputs
@@ -191,7 +191,7 @@ python k_anonymity_simulation.py
 Demonstrates location obfuscation using the Laplace mechanism.
 
 ```bash
-python differential_privacy_simulation.py
+python3 differential_privacy_simulation.py
 ```
 
 ### Outputs
@@ -203,7 +203,7 @@ python differential_privacy_simulation.py
 ## 3. Run Graph-Constrained Differential Privacy Simulation
 
 ```bash
-python graph_constrained_dp_simulation.py
+python3 graph_constrained_dp_simulation.py
 ```
 
 ### Outputs
@@ -215,7 +215,7 @@ python graph_constrained_dp_simulation.py
 ## 4. Run Density-Aware Adaptive k-Anonymity Simulation
 
 ```bash
-python density_aware_k_anonymity_simulation.py
+python3 density_aware_k_anonymity_simulation.py
 ```
 
 ### Outputs
@@ -227,7 +227,7 @@ python density_aware_k_anonymity_simulation.py
 ## 5. Run Temporal Cloaking Simulation
 
 ```bash
-python temporal_cloaking_simulation.py
+python3 temporal_cloaking_simulation.py
 ```
 
 ### Outputs
@@ -243,7 +243,7 @@ python temporal_cloaking_simulation.py
 All algorithms can be executed together using a unified runner:
 
 ```bash
-python experiments/run_all.py
+python3 experiments/run_all.py
 ```
 
 ---
