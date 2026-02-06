@@ -2,10 +2,10 @@
 
 ## Project Overview
 
-This project implements **Density-Aware k-Anonymity** for ensuring user location privacy in **IoT-enabled smart cities**.  
-Unlike traditional graph-based k-anonymity, which uses a fixed k, Density-Aware k-Anonymity dynamically adjusts the anonymity parameter based on local user density, providing an optimized **privacy–utility tradeoff**.
+This project implements **Density-Aware k-Anonymity** for ensuring user location privacy in **IoT-enabled smart cities**.
+Unlike traditional graph-based k-anonymity, which uses a fixed k , Density-Aware k-Anonymity dynamically adjusts the anonymity parameter based on local user density, providing an optimized **privacy–utility tradeoff**.
 
-The system models an urban environment as a grid-based graph and generalizes user locations into **connected anonymization regions** that contain at least *k* users, where k is chosen adaptively based on the local spatial context.
+The system models an urban environment as a grid-based graph and generalizes user locations into **connected anonymization regions** that contain at least *k* users , where k is chosen adaptively based on the local spatial context.
 
 ---
 
@@ -14,28 +14,53 @@ The system models an urban environment as a grid-based graph and generalizes use
 ### Core Components
 
 #### 1. SmartCityGraph
+
 Models the smart city as a 2D grid graph:
-- Nodes represent intersections; edges represent road connectivity
-- Randomly distributes a configurable number of users across nodes
-- Maintains spatial coordinates for realistic visualization and distance metrics
+
+* Nodes represent intersections; edges represent road connectivity 
+
+
+* Randomly distributes a configurable number of users (default: **80 users**) across nodes to ensure varied density 
+
+
+* Maintains spatial coordinates for realistic visualization and distance metrics
 
 #### 2. Density-Aware k-Anonymity Algorithm
+
 The core logic engine for density-aware privacy:
-- **Density Computation:** Uses BFS (depth=1) to count users in a node's immediate neighborhood
-- **Adaptive k Selector:** Maps neighborhood density to privacy levels (k=10 for sparse, k=5 for medium, k=2 for dense)
-- **Region Expansion:** Grows a connected subgraph until the required *k* users are reached
+
+* 
+**Density Computation:** Uses BFS (depth=1) to count users in a node's immediate neighborhood 
+
+
+* 
+**Adaptive k Selector:** Maps neighborhood density to privacy levels (**k=10** for sparse < 6, **k=5** for medium < 12, **k=2** for dense ≥ 12) 
+
+
+* 
+**Region Expansion:** Grows a connected subgraph until the required *k* users are reached 
+
+
 
 #### 3. Density-Aware k-Anonymity Experiment
+
 An experiment management layer that:
-- Orchestrates multiple simulation runs (default: 20 runs)
-- Collects statistical data on densities, k-values, and resulting region sizes
-- Provides summary metrics including average region size and min/max bounds
+
+* Orchestrates multiple simulation runs (default: **30 runs**)
+* Collects statistical data on densities, k-values, and resulting region sizes 
+
+
+* Provides summary metrics including average region size and min/max bounds
 
 #### 4. Density-Aware k-Anonymity Visualization
+
 A dedicated visualization suite that:
-- Generates scatter plots for privacy–utility analysis
-- Produces spatial graph plots highlighting the target user and the anonymized region
-- Automatically exports results to a structured `results/` directory
+
+* Generates scatter plots for privacy–utility analysis 
+
+
+* Produces **enhanced spatial graph plots** highlighting the target user (Gold Star), the anonymized region peers (Salmon Circles), and connectivity paths
+* Automatically exports results to a structured `results/` directory
 
 ---
 
@@ -48,8 +73,8 @@ For each user query:
 1. Identify the user's target node in the SmartCityGraph
 2. Compute local user density using a 1-hop BFS search
 3. Select k value adaptively:
-   - Density < 4  -> k = 10 (High Privacy)
-   - Density < 10 -> k = 5  (Balanced)
+   - Density < 6  -> k = 10 (High Privacy)
+   - Density < 12 -> k = 5  (Balanced)
    - Else         -> k = 2  (High Utility)
 4. Perform BFS region expansion starting from the target node
 5. Accumulate users until the selected k-threshold is met
@@ -59,9 +84,15 @@ For each user query:
 
 ## Key Properties
 
-* Context-aware anonymity levels based on real-time user distribution
-* Guaranteed connectivity of anonymization regions via graph-based BFS
-* Higher service precision in dense urban areas; higher privacy in sparse regions
+* Context-aware anonymity levels based on real-time user distribution 
+
+
+* Guaranteed connectivity of anonymization regions via graph-based BFS 
+
+
+* Higher service precision in dense urban areas; higher privacy in sparse regions 
+
+
 * Modular, object-oriented design for research extensibility
 
 ---
@@ -70,9 +101,9 @@ For each user query:
 
 * Object-oriented architecture (City, Algorithm, Experiment, and Visualization classes)
 * Automated result export to local `results/` folder
-* Configurable simulation parameters (grid size, user count, random seed)
+* Configurable simulation parameters (grid size, user count=80, random seed)
 * Multi-run statistical analysis pipeline for Density-Aware k-Anonymity
-* High-fidelity visualization of spatial anonymization regions
+* **High-fidelity visualization** of spatial anonymization regions with edge connectivity highlighting
 
 ---
 
@@ -84,13 +115,22 @@ For each user query:
 | --- | --- | --- | --- | --- |
 | Run 01 | 12 | Sparse | 10 | 14 |
 | Run 05 | 04 | Medium | 5 | 6 |
-| Run 18 | 22 | Dense | 2 | 1 |
+| Run 18 | 22 | Dense | 2 | 2 |
 
 ### Observations
 
-* **Adaptive Efficiency:** The system successfully lowers k in dense areas to preserve location utility.
-* **Privacy Assurance:** In sparse areas, the region size expands significantly to ensure k-anonymity.
-* **Connectivity:** All generated regions maintain road-network connectivity, preserving spatial realism.
+* 
+**Adaptive Efficiency:** The system successfully lowers k in dense areas to preserve location utility.
+
+
+* 
+**Privacy Assurance:** In sparse areas, the region size expands significantly to ensure k-anonymity.
+
+
+* 
+**Connectivity:** All generated regions maintain road-network connectivity, preserving spatial realism.
+
+
 
 ---
 
@@ -98,7 +138,7 @@ For each user query:
 
 ### 1. Density vs. Selected k
 
-A scatter plot demonstrating the inverse relationship between local density and the required anonymity level.
+A scatter plot demonstrating the inverse relationship between local density and the required anonymity level. Includes explicit markers for k-levels (2, 5, 10).
 
 **Output file:** `results/density_vs_k.png`
 
@@ -112,9 +152,10 @@ Visualizes how the physical area of the privacy region scales with the chosen k-
 
 A spatial graph highlighting:
 
-* **Yellow Node:** The actual user location (Target)
-* **Red Nodes:** The connected anonymization region
-* **Blue Nodes:** The rest of the smart city grid
+* **Target User:** Gold Star node
+* **Region Peers:** Salmon nodes forming the anonymity group
+* **Region Edges:** Thick red lines showing valid paths within the group
+* **Background:** Light grey nodes and edges for context
 
 **Output file:** `results/region_visualization.png`
 
@@ -150,18 +191,27 @@ python density_aware_k_anonymity_simulation.py
 
 * 5 × 5 Grid-based city model (configurable)
 * Integer-labeled nodes with (x, y) mapping
-* Random user distribution with seed support for reproducibility
+* 
+**Increased User Density:** 80 users randomly distributed to ensure valid high-density test cases 
+
+
 
 ### Privacy Computation
 
-* BFS-based density estimation (depth = 1)
-* BFS-based region expansion (connected subgraph constraint)
-* Threshold-based adaptive k selection
+* BFS-based density estimation (depth = 1) 
+
+
+* BFS-based region expansion (connected subgraph constraint) 
+
+
+* Threshold-based adaptive k selection (Thresholds: 6, 12)
 
 ### Metrics Collected
 
 * Neighborhood user density
-* Region size (node count)
+* Region size (node count) 
+
+
 * Summary statistics (Average k, Avg/Min/Max region size)
 
 ---
@@ -170,13 +220,19 @@ python density_aware_k_anonymity_simulation.py
 
 ### Topological Complexity
 
-* Grid-based model is a simplification of real-world irregular road networks
+* Grid-based model is a simplification of real-world irregular road networks 
+
+
 * BFS density is limited to a fixed 1-hop depth
 
 ### Dynamic Constraints
 
-* Model currently assumes static users (no mobility/trajectory support)
-* Temporal privacy correlations are not modeled
+* Model currently assumes static users (no mobility/trajectory support) 
+
+
+* Temporal privacy correlations are not modeled 
+
+
 
 ---
 
@@ -186,13 +242,21 @@ python density_aware_k_anonymity_simulation.py
 
 * Implementation of l-diversity and t-closeness on top of Density-Aware k-Anonymity
 * Adaptive BFS depth for density estimation
-* Differential privacy integration for edge weights
+* Differential privacy integration for edge weights 
+
+
 
 ### System Integration
 
-* Support for real-world OpenStreetMap (OSM) graph data
-* Integration with fog/edge computing nodes for distributed anonymization
-* Trajectory anonymization for moving IoT devices
+* Support for real-world OpenStreetMap (OSM) graph data 
+
+
+* Integration with fog/edge computing nodes for distributed anonymization 
+
+
+* Trajectory anonymization for moving IoT devices 
+
+
 
 ---
 
@@ -209,14 +273,18 @@ python density_aware_k_anonymity_simulation.py
 
 This work builds on concepts from:
 
-* Spatial cloaking and graph-based anonymization
-* Location privacy in IoT smart city architectures
-* Density-aware privacy-utility optimization
+* Spatial cloaking and graph-based anonymization 
+
+
+* Location privacy in IoT smart city architectures 
+
+
+* Density-aware privacy-utility optimization 
+
+
 
 ---
 
-**Author**: Praagya Garg  
-**Context**: IoT Smart Cities Privacy Research  
+**Author**: Praagya Garg
+**Context**: IoT Smart Cities Privacy Research
 **Date**: January 2026
-
-
