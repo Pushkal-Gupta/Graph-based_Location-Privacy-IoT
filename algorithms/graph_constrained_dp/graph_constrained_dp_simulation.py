@@ -196,10 +196,12 @@ class GraphConstrainedDPExperiment:
     
     def run_simulation(self):
         """Execute the full experimental pipeline."""
-        print("\n====== Running Graph-Constrained Differential Privacy Experiment ======\n")
+        print("Graph-Constrained Differential Privacy for IoT Smart Cities")
+        print("=" * 70)
         
         for epsilon in self.algorithm.epsilon_values:
-            print(f"Testing with ε = {epsilon}")
+            print(f"\nTesting with ε = {epsilon}")
+            print("-" * 70)
             
             graph_errors = []
             euclidean_errors = []
@@ -223,6 +225,10 @@ class GraphConstrainedDPExperiment:
                 graph_errors.append(graph_dist)
                 euclidean_errors.append(euclidean_err)
                 projection_distances.append(projection_dist)
+                
+                # Print individual run result
+                print(f"Run {i:02d} | Original={target_node:02d} | Obfuscated={obf_node:02d} | "
+                      f"GraphDist={graph_dist:.2f} | EuclideanErr={euclidean_err:.2f}")
             
             # Store aggregated results
             self.results["graph_constrained"][f"epsilon_{epsilon}"] = {
@@ -232,12 +238,8 @@ class GraphConstrainedDPExperiment:
                 "max_graph_error": max(graph_errors),
                 "min_graph_error": min(graph_errors)
             }
-            
-            print(f"  Mean Graph Distance Error: {mean(graph_errors):.2f} hops")
-            print(f"  Mean Euclidean Error: {mean(euclidean_errors):.2f} units")
-            print(f"  Mean Projection Distance: {mean(projection_distances):.2f} units\n")
         
-        print("====== Experiment Complete ======\n")
+        print()
         return self.results
     
     def get_experiment_summary(self) -> Dict:
@@ -326,6 +328,7 @@ class GraphConstrainedDPVisualization:
         
         plt.tight_layout()
         plt.savefig("results/privacy_utility_analysis.png", dpi=300, bbox_inches='tight')
+        plt.show()
         plt.close()
     
     @staticmethod
@@ -389,6 +392,7 @@ class GraphConstrainedDPVisualization:
         
         plt.tight_layout()
         plt.savefig("results/graph_constrained_dp_demo.png", dpi=300, bbox_inches='tight')
+        plt.show()
         plt.close()
     
     @staticmethod
@@ -438,6 +442,7 @@ class GraphConstrainedDPVisualization:
         
         plt.tight_layout()
         plt.savefig("results/single_obfuscation_visualization.png", dpi=300, bbox_inches='tight')
+        plt.show()
         plt.close()
 
 # ================================================================================
@@ -447,43 +452,19 @@ class GraphConstrainedDPVisualization:
 def main():
     """Main execution pipeline for graph-constrained differential privacy simulation."""
     
-    print("\n" + "="*80)
-    print("Graph-Constrained Differential Privacy for IoT Smart Cities")
-    print("="*80 + "\n")
-    
     # 1. Initialize the City and Algorithm
-    print("Initializing Smart City Graph...")
     smart_city = SmartCityGraph(grid_size=5, num_users=30, seed=42)
-    print(f"  Grid Size: {smart_city.grid_size} × {smart_city.grid_size}")
-    print(f"  Total Nodes: {len(smart_city.graph.nodes())}")
-    print(f"  Total Users: {smart_city.num_users}\n")
-    
-    print("Initializing Graph-Constrained DP Algorithm...")
     algorithm = GraphConstrainedDifferentialPrivacy(smart_city)
-    print(f"  Privacy Budgets (ε): {algorithm.epsilon_values}\n")
     
     # 2. Run the Experiment
     experiment_manager = GraphConstrainedDPExperiment(algorithm, runs=30)
     results = experiment_manager.run_simulation()
     
-    # 3. Print Summary Statistics
-    print("=== Experiment Summary ===")
-    summary = experiment_manager.get_experiment_summary()
-    for eps_key, metrics in summary.items():
-        print(f"\n{eps_key}:")
-        print(f"  Graph Distance Error: {metrics['graph_error']:.2f} hops")
-        print(f"  Euclidean Error: {metrics['euclidean_error']:.2f} units")
-        print(f"  Projection Distance: {metrics['projection_dist']:.2f} units")
-    
-    # 4. Generate Visualizations
-    print("\n\nGenerating visualizations...")
+    # 3. Generate Visualizations
     GraphConstrainedDPVisualization.plot_privacy_utility_analysis(results)
-    print("  ✓ Privacy-utility analysis saved")
-    
     GraphConstrainedDPVisualization.visualize_obfuscation_demo(smart_city, algorithm)
-    print("  ✓ Obfuscation demonstration saved")
     
-    # 5. Detailed single example
+    # 4. Detailed single example
     sample_node = random.choice(list(smart_city.graph.nodes()))
     sample_epsilon = 1.0
     obf_node, noisy_x, noisy_y, const_x, const_y = \
@@ -493,17 +474,10 @@ def main():
         smart_city, sample_node, obf_node, noisy_x, noisy_y, 
         const_x, const_y, sample_epsilon
     )
-    print("  ✓ Single obfuscation visualization saved")
     
-    # 6. Save results to JSON
+    # 5. Save results to JSON
     with open("results/simulation_results.json", "w") as f:
         json.dump(results, f, indent=2)
-    print("  ✓ Results saved to JSON\n")
-    
-    print("="*80)
-    print("Simulation completed successfully!")
-    print("Check the 'results/' folder for all outputs.")
-    print("="*80 + "\n")
 
 if __name__ == "__main__":
     main()
