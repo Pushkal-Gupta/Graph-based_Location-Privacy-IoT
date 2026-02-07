@@ -1,22 +1,22 @@
-# Spatial Privacy Graph-Based Approaches for Location Privacy in IoT Smart Cities
+# Spatio-temporal Privacy Graph-Based Approaches for Location Privacy in IoT Smart Cities
 
 ## Overview
 
-Smart cities rely on large-scale IoT deployments such as smartphones, connected vehicles, cameras, and environmental sensors. These devices continuously generate fine-grained spatial data that can unintentionally reveal sensitive user information such as home locations, workplaces, and detailed mobility patterns.
+Smart cities rely on large-scale IoT deployments such as smartphones, connected vehicles, cameras, and environmental sensors. These devices continuously generate fine-grained spatial and temporal data that can unintentionally reveal sensitive user information such as home locations, workplaces, and detailed mobility patterns.
 
-This repository presents **graph-based spatial privacy approaches** for protecting location privacy in IoT-enabled smart cities while preserving data utility for urban analytics, traffic management, and city-scale decision-making.
+This repository presents **graph-based spatial and temporal privacy approaches** for protecting location privacy in IoT-enabled smart cities while preserving data utility for urban analytics, traffic management, and city-scale decision-making.
 
-The project is implemented as a **completed, research-grade framework** that evaluates multiple spatial privacy-preserving algorithms under a **common simulation and evaluation pipeline**, enabling systematic and reproducible comparison of privacy–utility tradeoffs.
+The project is implemented as a **completed, research-grade framework** that evaluates multiple privacy-preserving algorithms under a **common simulation and evaluation pipeline**, enabling systematic and reproducible comparison of privacy–utility tradeoffs.
 
 ---
 
 ## Objectives
 
-- Protect user location privacy in smart city IoT systems
+- Protecting User Location and Temporal Privacy in Smart City IoT Systems
 - Prevent re-identification from spatial and mobility data
-- Preserve usefulness of location data for city-scale analytics
+- Maintaining the Usefulness of Location and Time Data for City-Scale Analytics
 - Demonstrate privacy–utility tradeoffs using practical simulations
-- Provide a comparative evaluation of spatial privacy mechanisms
+- Provide a comparative evaluation of spatial and temporal privacy mechanisms
 
 ---
 
@@ -41,7 +41,7 @@ The project is implemented as a **completed, research-grade framework** that eva
 
 ## Implemented Approaches
 
-This repository implements and evaluates **five spatial privacy-preserving algorithms**, all executed under identical datasets, metrics, and attacker assumptions.
+This repository implements and evaluates **five spatio-temporal privacy-preserving algorithms**, all executed under identical datasets, metrics, and attacker assumptions.
 
 ---
 
