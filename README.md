@@ -152,9 +152,11 @@ graph-based-location-privacy-iot/
 │   └── configs/
 │
 ├── results/
-│   ├── plots/
-│   ├── tables/
-│   └── raw_json/
+│   ├── k_anonymity/
+│   ├── differential_privacy/
+│   ├── graph_constrained_dp/
+│   ├── density_aware_k_anonymity/
+│   └── temporal_cloaking/
 │
 └── paper/
     ├── figures/

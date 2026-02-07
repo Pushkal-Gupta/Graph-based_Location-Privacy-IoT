@@ -118,6 +118,7 @@ Trajectory_u = [(v₁, τ₁), (v₂, τ₂), ...]
 
 Where:
 • v is a node in the graph
+
 • τ is a timestamp
 
 CSV Schema
