@@ -124,7 +124,7 @@ Where:
 
 *Format*
 ```text
-device_id,location_id,date,timestamp
+user_id,location_id,date,timestamp
 ```
 
 ```text
