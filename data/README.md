@@ -127,6 +127,7 @@ Where:
 user_id,location_id,date,timestamp
 ```
 
+*Sample*
 ```text
 1,A,2026-02-01 08:00:00
 1,B,2026-02-01 08:10:00
