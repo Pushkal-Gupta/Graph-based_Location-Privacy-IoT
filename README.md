@@ -1,4 +1,4 @@
-# Spatial Privacy Graph-Based Approaches for Location Privacy in IoT Smart Cities
+# Privacy Graph-Based Approaches for Location Privacy in IoT Smart Cities
 
 ## Overview
 
