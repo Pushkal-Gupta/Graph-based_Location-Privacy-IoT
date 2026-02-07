@@ -407,6 +407,8 @@ optimized or fully adaptive system. Advanced extensions—such as adaptive windo
 sizing, dynamic k-selection, semantic location cloaking, or integration with
 differential privacy—are deliberately deferred and documented as future work.
 
+---
+
 ## References and Context
 
 ### Foundational Papers
