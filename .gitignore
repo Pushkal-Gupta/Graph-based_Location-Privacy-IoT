@@ -9,3 +9,5 @@ results/k_anonymity/batch*/
 results/differential_privacy/batch*/
 results/graph_constrained_dp/batch*/
 results/density_aware_k_anonymity/batch*/
+tempCodeRunnerFile.py
+.vscode/
