@@ -146,7 +146,7 @@ Shows original vs. cloaked trajectories for multiple users, with:
 - Temporal window boundaries
 - Generalized location points
 
-**Output file:** `results/trajectory_comparison.png`
+**Output file:** `results/temporal_cloaking/trajectory_comparison.png`
 
 ### 2. Temporal Analysis
 
@@ -157,7 +157,7 @@ Four-panel analysis including:
 - Compression ratio histogram
 - Error correlation scatter plot
 
-**Output file:** `results/temporal_analysis.png`
+**Output file:** `results/temporal_cloaking/temporal_analysis.png`
 
 ### 3. Privacy–Utility Tradeoff
 
@@ -168,7 +168,7 @@ Multi-dimensional tradeoff analysis:
 - Privacy-utility tradeoff space
 - 3D parameter optimization
 
-**Output file:** `results/privacy_utility_tradeoff.png`
+**Output file:** `results/temporal_cloaking/privacy_utility_tradeoff.png`
 
 ---
 
@@ -203,12 +203,11 @@ Parameters:
 
 ## Generated Files
 
-- `results/trajectory_comparison.png`
-- `results/temporal_analysis.png`
-- `results/privacy_utility_tradeoff.png`
-- `results/temporal_cloaking_results.json`
-- `results/trajectory_data.csv`
-- `results/parameter_sweep_results.json`
+- `results/temporal_cloaking/trajectory_comparison.png`
+- `results/temporal_cloaking/temporal_analysis.png`
+- `results/temporal_cloaking/privacy_utility_tradeoff.png`
+- `results/temporal_cloaking/temporal_cloaking_results.json`
+- `results/temporal_cloaking/trajectory_data.csv`
 
 ---
 
@@ -339,6 +338,75 @@ Parameters:
 
 ---
 
+## Methodological Attribution and Design Choices
+
+### Foundational Model
+
+The temporal cloaking mechanism implemented in this project follows the
+trajectory-centric temporal cloaking model introduced by Okan Abul et al. (2008)
+in “Never Walk Alone: Uncertainty for Anonymity in Moving Objects Databases”.
+This model extends the original concept of spatial and temporal cloaking proposed
+by Marco Gruteser and Dirk Grunwald (2003), which primarily focused on anonymizing
+individual location-based service (LBS) queries, to the anonymization of entire
+user trajectories.
+
+Unlike query-centric cloaking, the Abul et al. framework explicitly addresses
+temporal correlation attacks and trajectory re-identification, making it suitable
+for publishing and analyzing spatiotemporal mobility datasets in smart city
+environments. This project adopts that trajectory-centric interpretation as its
+conceptual foundation.
+
+### Alignment with the Abul et al. Model
+
+The implemented algorithm conforms to the core principles of Abul et al. (2008):
+
+- **Trajectory-centric processing:** Privacy is enforced across complete user
+  trajectories rather than isolated location points.
+- **Temporal uncertainty:** Exact timestamps are never released; each reported
+  location is associated with a time interval.
+- **Spatiotemporal k-anonymity:** Every released spatiotemporal region corresponds
+  to at least _k_ distinct users.
+- **“Never walk alone” guarantee:** No user is disclosed unless sufficient
+  co-located users exist within the same temporal window.
+
+These properties collectively ensure resistance to trajectory reconstruction and
+linkage attacks.
+
+### Concrete Design Choices in This Implementation
+
+While the underlying privacy model follows Abul et al. (2008), several explicit
+design choices were fixed in this implementation to create a clear, reproducible
+baseline:
+
+- **Temporal windowing strategy:**  
+  Fixed, global, non-overlapping temporal windows are used for all users.
+
+- **k-anonymity enforcement policy:**  
+  When a temporal window does not satisfy the k-anonymity constraint, temporal
+  expansion is applied first. Spatial expansion is intentionally deferred.
+
+- **Spatial generalization method:**  
+  Locations are generalized using a centroid-based method and snapped to the
+  nearest valid node in the city graph.
+
+- **Spatial model:**  
+  A graph-based city representation is used, where nodes represent discrete
+  locations and edges represent feasible movement paths.
+
+- **Time representation:**  
+  All temporal computations are performed using Python `datetime` objects.
+
+- **Experimental batching:**  
+  Each execution produces results in an isolated batch directory (e.g., `batch1`,
+  `batch2`, …), supporting reproducible experimentation.
+
+### Scope and Limitations
+
+The current implementation is intended as a standard baseline rather than an
+optimized or fully adaptive system. Advanced extensions—such as adaptive window
+sizing, dynamic k-selection, semantic location cloaking, or integration with
+differential privacy—are deliberately deferred and documented as future work.
+
 ## References and Context
 
 ### Foundational Papers
@@ -356,10 +424,10 @@ Parameters:
 
 ### Research Context
 
-This work is part of the broader "Spatial Privacy Graph-Based Approaches for Location Privacy in IoT Smart Cities" research initiative, contributing specifically to temporal privacy protection mechanisms for smart city IoT deployments.
+This work is part of the broader "Spatio-temporal Privacy Graph-Based Approaches for Location Privacy in IoT Smart Cities" research initiative, contributing specifically to temporal privacy protection mechanisms for smart city IoT deployments.
 
 ---
 
 **Author:** Naga Sai Dattu  
-**Context:** IoT Smart Cities Privacy Research Group  
+**Context:** IOT Smart Cities Privacy Research Group  
 **Date:** February 2026
