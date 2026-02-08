@@ -50,7 +50,7 @@ Handles data visualization and reporting:
 
 ### Core Workflow
 
-For a given target user at node , the system executes the following process:
+For a given target user at node N, the system executes the following process:
 
 ```text
 1. Density Estimation:
@@ -525,3 +525,4 @@ This implementation is grounded in the concept of **Spatial Cloaking** and **k-A
 **Author:** Praagya Garg  
 **Context:** IoT Smart Cities Privacy Research  
 **Date:** January 2026
+
