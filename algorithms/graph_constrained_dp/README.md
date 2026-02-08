@@ -2,11 +2,9 @@
 
 ## Project Overview
 
-This project implements **Graph-Constrained Differential Privacy** for ensuring user location privacy in **IoT-enabled smart cities**.
+This project implements **Graph-Constrained Differential Privacy** for protecting user location privacy in **IoT-enabled smart cities**. The system perturbs user locations using a formal differential privacy mechanism and then constrains the perturbed outputs to valid locations on a city graph, ensuring spatial realism while preserving privacy guarantees.
 
-Unlike standard differential privacy, which adds noise to coordinates without spatial awareness, Graph-Constrained Differential Privacy projects obfuscated locations onto valid graph nodes, ensuring that anonymized positions correspond to **real intersections or road locations** within the urban topology.
-
-The system models an urban environment as a grid-based graph and applies the **Laplace mechanism** for differential privacy, followed by a **graph projection step** that maps noisy coordinates to the nearest valid node, preserving both **formal privacy guarantees** and **spatial realism**.
+Unlike unconstrained coordinate-based differential privacy, graph-constrained differential privacy ensures that anonymized locations always correspond to real intersections or road nodes, preventing physically impossible outputs while maintaining formal ε-differential privacy through post-processing immunity.
 
 ---
 
@@ -14,39 +12,41 @@ The system models an urban environment as a grid-based graph and applies the **L
 
 ### Core Components
 
-#### 1. SmartCityGraph
+#### 1. LocationSimulator
 
-Models the smart city as a 2D grid graph:
+Models static user location observations in smart cities:
 
-- Nodes represent intersections; edges represent road connectivity
-- Randomly distributes a configurable number of users across nodes
-- Maintains spatial coordinates for realistic visualization and distance metrics
-- Provides efficient nearest-node lookup for graph projection
+- Represents user locations as nodes in a city graph
+- Supports deterministic dummy distributions for reproducible experiments
+- Loads real user location datasets from CSV when enabled
+- Maintains spatial coordinates for distance and utility evaluation
 
-#### 2. Graph-Constrained Differential Privacy Algorithm
+#### 2. GraphConstrainedDPAlgorithm
 
-The core logic engine for graph-aware privacy:
+Implements the core graph-constrained differential privacy mechanism:
 
-- **Laplace Noise Addition:** Applies standard differential privacy noise to (x, y) coordinates
-- **Graph Projection:** Maps noisy coordinates to the nearest valid graph node
-- **Constraint Enforcement:** Ensures all obfuscated locations lie on actual road network nodes
-- **Utility Metrics:** Computes graph distance and Euclidean error for privacy-utility analysis
+- **Laplace Noise Injection:** Applies Laplace(0, sensitivity / ε) noise to coordinates
+- **Graph Projection:** Snaps noisy coordinates to the nearest valid graph node
+- **Post-processing Guarantee:** Projection preserves ε-differential privacy
+- **Single-Point Obfuscation:** Processes each location independently
 
-#### 3. Graph-Constrained DP Experiment
+#### 3. PrivacyUtilityAnalyzer
 
-An experiment management layer that:
+Evaluates privacy–utility tradeoffs under differential privacy:
 
-- Orchestrates multiple simulation runs (default: 30 runs)
-- Collects statistical data on graph distance errors, Euclidean errors, and projection distances
-- Provides summary metrics including mean/min/max error bounds across different privacy levels
+- **Graph Error:** Shortest-path distance between original and obfuscated nodes
+- **Euclidean Error:** Straight-line distance between original and obfuscated coordinates
+- **Projection Distance:** Distance between noisy and projected points
+- **Aggregated Metrics:** Mean errors computed across multiple trials per ε
 
-#### 4. Graph-Constrained DP Visualization
+#### 4. GraphConstrainedDPVisualizer
 
-A dedicated visualization suite that:
+Provides comprehensive spatial visualization:
 
-- Generates privacy-utility tradeoff curves for multiple epsilon values
-- Produces spatial graph plots highlighting original, noisy, and graph-constrained locations
-- Automatically exports results to a structured `results/graph_constrained_dp` directory
+- Multi-ε obfuscation demonstrations (original → noisy → projected)
+- Privacy–utility tradeoff plots
+- Single-obfuscation detailed diagrams
+- Publication-ready figures exported per experiment batch
 
 ---
 
@@ -55,92 +55,107 @@ A dedicated visualization suite that:
 ### Algorithm Outline
 
 ```text
-For each user location query:
-1. Identify the user's original node in the SmartCityGraph
-2. Extract (x, y) coordinates of the original node
-3. Add Laplace noise to coordinates:
-   - noise_scale = sensitivity / ε
-   - x' = x + Laplace(0, noise_scale)
-   - y' = y + Laplace(0, noise_scale)
-4. Project noisy coordinates to the graph:
-   - Find nearest graph node to (x', y')
-   - Return the coordinates of this node as the obfuscated location
-5. Result is both differentially private AND spatially realistic
+For each user location L = (x, y):
+
+1. Noise Injection:
+   - Compute scale = sensitivity / ε
+   - Sample Laplace noise independently for x and y
+   - Obtain noisy point (x', y')
+
+2. Graph Projection:
+   - Find nearest node v in city graph to (x', y')
+   - Replace noisy point with node v
+
+3. Output:
+   - Release v as the obfuscated location
+
+4. Privacy Guarantee:
+   - Laplace mechanism ensures ε-differential privacy
+   - Projection is deterministic post-processing → privacy preserved
 ```
+
+---
 
 ## Key Properties
 
-- Formal ε-differential privacy guarantee inherited from Laplace mechanism
-- Ensures obfuscated locations correspond to real intersections/roads
-- Prevents physically impossible locations (e.g., in buildings, water bodies, empty space)
-- Better utility than unconstrained DP for location-based services requiring valid addresses
-- Maintains connectivity constraints of the urban graph structure
-- Modular, object-oriented design for research extensibility
+- **Formal ε-Differential Privacy:** Guaranteed by Laplace mechanism
+- **Spatial Realism:** Outputs are valid graph nodes (intersections / roads)
+- **Topology Preservation:** Obfuscated locations respect road network structure
+- **Configurable Tradeoff:** ε controls privacy–utility balance
+- **Stateless Processing:** Suitable for independent location releases
 
 ---
 
 ## Implementation Features
 
-- Modular functional architecture with clearly separated components for data loading, privacy mechanisms, evaluation, and visualization.
-- Automated result export to local `results/` folder
-- Configurable simulation parameters (grid size, user count, random seed, epsilon values)
-- Multi-run statistical analysis pipeline for robust evaluation
-- High-fidelity visualization of spatial anonymization with projection steps
-- Graph distance and Euclidean error metrics for comprehensive analysis
+- Deterministic dummy mode with fixed random seed for reproducibility
+- Multiple ε values evaluated in a single run
+- Multi-run aggregation for statistically stable metrics
+- Clean separation between algorithm, evaluation, and visualization
+- Exportable CSV and JSON artifacts for analysis and plotting
+- Automatic experiment batching (batch1, batch2, …)
 
 ---
 
-## Graph-Constrained DP Experiment Results
+## Simulation Parameters
 
-### Performance Metrics (Example Output)
+| Parameter   | Default Value           | Description                                |
+| ----------- | ----------------------- | ------------------------------------------ |
+| City Graph  | 4-node square (dummy)   | Deterministic test graph                   |
+| Num Users   | 6 (dummy)               | Location records sampled                   |
+| ε Values    | 0.1, 0.5, 1.0, 2.0, 5.0 | Privacy budgets                            |
+| Runs per ε  | 30                      | Independent trials per privacy level       |
+| Sensitivity | 1.0                     | L1 sensitivity for coordinate perturbation |
+| Random Seed | 42                      | Ensures reproducible experiments           |
 
-| ε (epsilon) | Privacy Level     | Mean Graph Error (hops) | Mean Euclidean Error | Mean Projection Distance |
-| ----------- | ----------------- | ----------------------- | -------------------- | ------------------------ |
-| 0.1         | Maximum Privacy   | 3.45                    | 2.87                 | 1.23                     |
-| 0.5         | Very High Privacy | 2.10                    | 1.65                 | 0.78                     |
-| 1.0         | High Privacy      | 1.40                    | 1.12                 | 0.52                     |
-| 2.0         | Medium Privacy    | 0.95                    | 0.73                 | 0.31                     |
-| 5.0         | Low Privacy       | 0.50                    | 0.38                 | 0.15                     |
+---
 
-### Observations
+## Performance Metrics
 
-- **Graph Constraint Benefit:** All obfuscated locations lie on valid graph nodes, ensuring spatial realism.
-- **Privacy-Utility Tradeoff:** Lower ε provides stronger privacy but increases location error.
-- **Projection Effect:** The projection step reduces extreme noise outliers by snapping to the nearest node.
-- **Connectivity Preservation:** Obfuscated locations maintain the topological structure of the urban network.
+### Privacy Metrics
+
+| Metric           | Description             | Target       |
+| ---------------- | ----------------------- | ------------ |
+| Privacy Budget ε | Noise magnitude control | Configurable |
+
+### Utility Metrics
+
+| Metric                   | Description                                              | Interpretation         |
+| ------------------------ | -------------------------------------------------------- | ---------------------- |
+| Mean Graph Error         | Shortest-path hops between original and obfuscated nodes | Topological distortion |
+| Mean Euclidean Error     | Straight-line distance between original and obfuscated   | Spatial distortion     |
+| Mean Projection Distance | Distance from noisy to projected point                   | Projection impact      |
 
 ---
 
 ## Visualization Outputs
 
-### 1. Privacy-Utility Analysis
+### 1. Privacy–Utility Analysis
 
-A comprehensive four-panel analysis showing:
+Shows error trends across ε values:
 
-- Graph distance error vs epsilon
-- Euclidean error vs epsilon
-- Noise projection distance vs epsilon
-- Combined error metric comparison
+- Graph error vs ε
+- Euclidean error vs ε
+- Projection distance vs ε
 
-**Output file:** `results/privacy_utility_analysis.png`
+**Output file:** `results/graph_constrained_dp/batchX/privacy_utility_analysis.png`
 
 ### 2. Location Obfuscation Demonstration
 
-Shows original locations (yellow), noisy points (orange X), and graph-constrained locations (red) for multiple epsilon values, with projection lines illustrating the constraint enforcement.
+Multi-ε visualization of:
 
-**Output file:** `results/graph_constrained_dp_demo.png`
+- Original node (yellow)
+- Noisy point (orange X)
+- Projected node (red)
+- Projection line (purple dashed)
+
+**Output file:** `results/graph_constrained_dp/batchX/graph_constrained_dp_demo.png`
 
 ### 3. Single Obfuscation Visualization
 
-A detailed spatial graph highlighting:
+Detailed illustration of one obfuscation event.
 
-- **Yellow Node:** The actual user location (Original)
-- **Orange X:** The noisy point after DP noise addition
-- **Purple Dashed Line:** The projection from noisy point to nearest node
-- **Red Node:** The final graph-constrained obfuscated location
-- **Gray Nodes:** The rest of the smart city grid
-
-**Output file:** `results/single_obfuscation_visualization.png`
+**Output file:** `results/graph_constrained_dp/batchX/single_obfuscation_visualization.png`
 
 ---
 
@@ -149,7 +164,7 @@ A detailed spatial graph highlighting:
 ### Prerequisites
 
 ```bash
-pip install networkx matplotlib numpy
+pip install numpy matplotlib networkx
 ```
 
 ### Running the Simulation
@@ -158,123 +173,172 @@ pip install networkx matplotlib numpy
 python3 graph_constrained_dp_simulation.py
 ```
 
-## Generated Files
+### Generated Files
 
-- `results/privacy_utility_analysis.png`
-- `obfuscated_locations.csv`
-- `results/graph_constrained_dp_demo.png`
-- `results/single_obfuscation_visualization.png`
-- `results/simulation_results.json`
+- `results/graph_constrained_dp/batchX/privacy_utility_analysis.png`
+- `results/graph_constrained_dp/batchX/graph_constrained_dp_demo.png`
+- `results/graph_constrained_dp/batchX/single_obfuscation_visualization.png`
+- `results/graph_constrained_dp/batchX/obfuscated_locations.csv`
+- `results/graph_constrained_dp/batchX/simulation_results.json`
 
 ---
 
 ## Technical Details
 
-### Differential Privacy Mechanism
+### Noise Injection Strategies
 
-- **Privacy Model:** ε-differential privacy
-- **Sensitivity:** L1 sensitivity = 1.0 (for coordinate perturbation)
-- **Noise Distribution:** Laplace(0, scale) where scale = sensitivity / ε
-- **Noise Application:** Independent noise added to x and y coordinates
+| Strategy                  | Description                      | Pros                | Cons               |
+| ------------------------- | -------------------------------- | ------------------- | ------------------ |
+| Laplace DP                | Add Laplace noise to coordinates | Formal ε-DP         | Unrealistic points |
+| Graph-Constrained Laplace | Laplace + projection             | Formal DP + realism | Projection error   |
 
-### Graph Projection
+### Graph Projection Methods
 
-- **Method:** Nearest node search using Euclidean distance
-- **Complexity:** O(n) for n nodes (can be optimized with spatial indexing)
-- **Constraint:** Output location must be a valid graph node
-
-### City Simulation
-
-- **City Model:** 5 × 5 grid graph (configurable)
-- **Total Nodes:** 25 intersections
-- **User Distribution:** Random placement across nodes
-- **Coordinate System:** Integer-labeled nodes with (x, y) mapping
-- **Dummy setup:** A small 4-node grid graph is used for deterministic testing. The implementation supports arbitrary grid sizes and real-world graphs (e.g., OSM).
-
-### Metrics Collected
-
-- Graph distance error (shortest path length on graph)
-- Euclidean distance error (straight-line distance in coordinate space)
-- Projection distance (distance from noisy point to constrained point)
-- Summary statistics (mean, min, max) for each metric
+| Method       | Description                | Use Case                  |
+| ------------ | -------------------------- | ------------------------- |
+| Nearest Node | Snap to closest graph node | Road/intersection privacy |
 
 ---
 
 ## Current Limitations
 
-### Simplified Graph Topology
+### Computational Complexity
 
-- Grid-based model is a simplification of real-world irregular road networks
-- Does not account for one-way streets, bridges, or complex intersections
+| Issue                  | Impact              | Workaround                  |
+| ---------------------- | ------------------- | --------------------------- |
+| Nearest-node scan      | O(n) per query      | Spatial indexing (future)   |
+| Shortest-path failures | Disconnected graphs | Catch exceptions / sentinel |
 
-### Projection Overhead
+### Model Assumptions
 
-- Nearest-node search adds computational overhead compared to pure coordinate DP
-- May become expensive for very large graphs without spatial indexing
+| Assumption       | Impact                     | Mitigation            |
+| ---------------- | -------------------------- | --------------------- |
+| Static locations | No temporal composition    | Temporal DP extension |
+| Uniform ε        | Same privacy for all users | Adaptive budgets      |
 
-### Uniform Privacy Budget
+### Privacy Analysis Limitations
 
-- Same epsilon applied to all users regardless of context
-- Does not adapt to local density or sensitivity requirements
-
-### Static User Model
-
-- Model currently assumes static users (no mobility/trajectory support)
-- Does not handle temporal correlations in location data
+| Limitation           | Description                | Mitigation             |
+| -------------------- | -------------------------- | ---------------------- |
+| Independent releases | No composition accounting  | Sequential DP models   |
+| Semantic ignorance   | Sensitive places unmodeled | Semantic DP extensions |
 
 ---
 
 ## Future Work
 
-### Algorithmic Extensions
+### Algorithmic Improvements
 
-- Implementation of adaptive epsilon selection based on local graph density
-- Integration of l-diversity and t-closeness on top of graph-constrained DP
-- Hybrid approaches combining k-anonymity with graph-constrained differential privacy
+| Improvement              | Benefit               | Priority |
+| ------------------------ | --------------------- | -------- |
+| Adaptive ε selection     | Density-aware privacy | High     |
+| Geo-indistinguishability | Distance-aware DP     | High     |
+| Hybrid DP + k-anonymity  | Stronger guarantees   | Medium   |
 
-### Graph Optimization
+### System Integration
 
-- Spatial indexing (k-d trees, R-trees) for efficient nearest-node queries
-- Support for weighted graphs with travel time or distance metrics
-- Handling of disconnected graph components
+| Integration      | Use Case           | Challenge           |
+| ---------------- | ------------------ | ------------------- |
+| Real IoT streams | Live anonymization | Latency constraints |
+| Edge deployment  | On-device privacy  | Resource limits     |
 
-### Real-World Integration
+### Advanced Privacy Features
 
-- Support for real-world OpenStreetMap (OSM) graph data
-- Road network preprocessing and simplification techniques
-- Integration with fog/edge computing nodes for distributed anonymization
+| Feature                   | Description                             | Privacy Gain |
+| ------------------------- | --------------------------------------- | ------------ |
+| Adaptive ε-Selection      | Context-aware privacy budget allocation | High         |
+| Trajectory-aware DP       | Protect movement sequences              | Very High    |
+| Semantic Location Privacy | Protect sensitive locations (home/work) | High         |
 
-### Trajectory Privacy
+### Evaluation Enhancements
 
-- Extension to trajectory obfuscation for moving IoT devices
-- Temporal graph-constrained DP with sequential composition
-- Path-based privacy metrics for mobile users
+| Enhancement         | Benefit              | Research Value |
+| ------------------- | -------------------- | -------------- |
+| Real-world datasets | Practical validation | High           |
+| Attack simulations  | Privacy verification | Critical       |
 
 ---
 
 ## Research Contributions
 
-- Modular OOP framework for graph-constrained differential privacy research
-- Empirical validation of graph constraint benefits for location privacy
-- Automated visualization and data collection pipeline for privacy-utility analysis
-- Extensible baseline for comparing graph-aware vs unconstrained DP mechanisms
-- Clear demonstration of spatial realism preservation in privacy-preserving systems
+### Theoretical Contributions
+
+- Demonstration of post-processing invariance of differential privacy
+- Graph-aware formulation of location privacy
+- Baseline for comparing unconstrained and constrained DP
+
+### Practical Contributions
+
+- Reproducible experimental framework with batching
+- Clean separation of algorithm and evaluation
+- Publication-ready visualizations
+
+### Empirical Contributions
+
+- Quantitative privacy–utility tradeoff characterization
+- Projection impact analysis
+- Comparative baseline for hybrid privacy schemes
+
+---
+
+## Methodological Attribution and Design Choices
+
+### Foundational Model
+
+This implementation is grounded in classical ε-differential privacy using the Laplace mechanism, as introduced by Cynthia Dwork et al., and incorporates spatial intuition from geo-indistinguishability.
+
+Key references:
+
+- Dwork, C. (2006): Foundations of differential privacy and Laplace mechanism.
+- Dwork, C., & Roth, A. (2014): The Algorithmic Foundations of Differential Privacy.
+- Andrés, M. E., et al. (2013): Geo-indistinguishability for location-based privacy.
+
+### Alignment with Differential Privacy Principles
+
+The implemented algorithm conforms to the core principles of differential privacy:
+
+- **Noise calibration:** Laplace(0, sensitivity / ε) ensures ε-DP.
+- **Post-processing:** Graph projection does not weaken privacy guarantees.
+- **Stateless releases:** Each location processed independently.
+
+### Concrete Design Choices in This Implementation
+
+While the underlying privacy model follows classical differential privacy theory, several explicit design choices were fixed in this implementation to create a clear, reproducible baseline:
+
+- **Fixed sensitivity:** Sensitivity = 1.0 for baseline comparability
+- **Deterministic projection:** Nearest-node graph projection
+- **Deterministic dummy graph:** Fixed 4-node square for reproducible testing
+- **Random seeding:** Seed = 42 for experiment reproducibility
+- **Per-run batching:** Full provenance with experiment batching
+- **Real data loaders:** Included but disabled by default
+
+### Scope and Limitations
+
+The current implementation provides a standard, reproducible baseline, not an optimized or adaptive DP system. Advanced variants (adaptive ε, trajectory DP, semantic privacy) are explicitly deferred to future work.
 
 ---
 
 ## References and Context
 
-This work builds on concepts from:
+### Foundational Papers
 
-- Differential privacy and the Laplace mechanism
-- Graph-based spatial modeling in smart cities
-- Location privacy in IoT architectures
-- Privacy-utility tradeoff optimization in location-based services
+1. Dwork, C. (2006). Differential Privacy.
+2. Dwork, C., & Roth, A. (2014). The Algorithmic Foundations of Differential Privacy.
+3. Andrés, M. E., et al. (2013). Geo-Indistinguishability.
 
-This framework serves as a **research-oriented and extensible foundation** for studying graph-constrained privacy mechanisms in smart city environments.
+### Related Work
+
+- **Location privacy in smart cities:** Foundational work on protecting user locations
+- **Spatial cloaking and k-anonymity:** Non-differential privacy baseline approaches
+- **Trajectory privacy and temporal cloaking:** Temporal dimension of privacy protection
+- **Differential Privacy:** Formal privacy framework with strong theoretical guarantees
+
+### Research Context
+
+This work is part of the broader "Spatio-temporal Privacy Graph-Based Approaches for Location Privacy in IoT Smart Cities" research initiative, contributing specifically to formal privacy-utility tradeoff characterization and graph-constrained mechanisms for smart city IoT deployments.
 
 ---
 
 **Author:** Naga Sai Dattu
-**Context:** IoT Smart Cities Privacy Research  
+**Context:** IoT Smart Cities Privacy Research
 **Date:** February 2026

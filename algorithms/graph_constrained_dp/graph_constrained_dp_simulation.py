@@ -237,10 +237,12 @@ def plot_privacy_utility(results):
     eps = EPSILON_VALUES
     graph_err = [results[f"epsilon_{e}"]["mean_graph_error"] for e in eps]
     euclid_err = [results[f"epsilon_{e}"]["mean_euclidean_error"] for e in eps]
+    proj_err = [results[f"epsilon_{e}"]["mean_projection_distance"] for e in eps]
 
     plt.figure()
     plt.plot(eps, graph_err, marker="o", label="Graph Distance")
     plt.plot(eps, euclid_err, marker="s", label="Euclidean Error")
+    plt.plot(eps, proj_err, marker="^", label="Projection Distance")
     plt.xscale("log")
     plt.xlabel("Privacy Budget (ε)")
     plt.ylabel("Error")
