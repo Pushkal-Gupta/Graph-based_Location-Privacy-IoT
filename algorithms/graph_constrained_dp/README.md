@@ -46,7 +46,7 @@ A dedicated visualization suite that:
 
 - Generates privacy-utility tradeoff curves for multiple epsilon values
 - Produces spatial graph plots highlighting original, noisy, and graph-constrained locations
-- Automatically exports results to a structured `results/` directory
+- Automatically exports results to a structured `results/graph_constrained_dp` directory
 
 ---
 
@@ -81,7 +81,7 @@ For each user location query:
 
 ## Implementation Features
 
-- Object-oriented architecture (City, Algorithm, Experiment, and Visualization classes)
+- Modular functional architecture with clearly separated components for data loading, privacy mechanisms, evaluation, and visualization.
 - Automated result export to local `results/` folder
 - Configurable simulation parameters (grid size, user count, random seed, epsilon values)
 - Multi-run statistical analysis pipeline for robust evaluation
@@ -161,6 +161,7 @@ python3 graph_constrained_dp_simulation.py
 ## Generated Files
 
 - `results/privacy_utility_analysis.png`
+- `obfuscated_locations.csv`
 - `results/graph_constrained_dp_demo.png`
 - `results/single_obfuscation_visualization.png`
 - `results/simulation_results.json`
@@ -188,6 +189,7 @@ python3 graph_constrained_dp_simulation.py
 - **Total Nodes:** 25 intersections
 - **User Distribution:** Random placement across nodes
 - **Coordinate System:** Integer-labeled nodes with (x, y) mapping
+- **Dummy setup:** A small 4-node grid graph is used for deterministic testing. The implementation supports arbitrary grid sizes and real-world graphs (e.g., OSM).
 
 ### Metrics Collected
 
