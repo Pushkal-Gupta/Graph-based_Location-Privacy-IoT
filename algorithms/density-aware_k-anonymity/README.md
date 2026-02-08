@@ -155,7 +155,7 @@ pip install networkx matplotlib
 The project includes a dedicated simulation runner.
 
 ```bash
-python density_aware_k_anonymity_simulation.py
+python3 density_aware_k_anonymity_simulation.py
 
 ```
 
@@ -525,3 +525,4 @@ This implementation is grounded in the concept of **Spatial Cloaking** and **k-A
 **Author:** Praagya Garg  
 **Context:** IoT Smart Cities Privacy Research  
 **Date:** January 2026
+
