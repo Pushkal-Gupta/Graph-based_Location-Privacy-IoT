@@ -106,7 +106,7 @@ For a given target user at node N, the system executes the following process:
 
 | Metric | Description | Strategy |
 | --- | --- | --- |
-| **Adaptive ** | The required anonymity set size | 10 (Sparse), 5 (Medium), 2 (Dense) |
+| **Adaptive** | The required anonymity set size | 10 (Sparse), 5 (Medium), 2 (Dense) |
 | **Local Density** | Users in immediate vicinity | Used to determine the "risk" level of the location |
 
 ### Utility Metrics
@@ -450,9 +450,9 @@ The system uses a tiered approach to classify density logic:
 
 | Density Level | User Count Threshold | Selected  | Rationale |
 | --- | --- | --- | --- |
-| **Sparse** |  users |  | High risk of re-identification; requires aggressive aggregation. |
-| **Medium** |  users |  | Standard urban density; balanced privacy settings. |
-| **Dense** |  users |  | Crowd provides natural cover; precise location utility is prioritized. |
+| **Sparse** |  $< 6$ users | $10$ | High risk of re-identification; requires aggressive aggregation. |
+| **Medium** |  $6 - 11$ users | $5$ | Standard urban density; balanced privacy settings. |
+| **Dense** |  $\ge 12$ users | $2$ | Crowd provides natural cover; precise location utility is prioritized. |
 
 ### Expansion Strategy
 
@@ -525,4 +525,3 @@ This implementation is grounded in the concept of **Spatial Cloaking** and **k-A
 **Author:** Praagya Garg  
 **Context:** IoT Smart Cities Privacy Research  
 **Date:** January 2026
-
