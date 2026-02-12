@@ -1,8 +1,3 @@
-**Here's your updated, clean, and professional README.md** that accurately reflects your **current code** (real GeoLife dataset integration, `results` folder, 3 plots, etc.).
-
----
-
-```markdown
 # Density-Aware k-Anonymity for Location Privacy in IoT Smart Cities
 
 ## Project Overview
@@ -168,4 +163,5 @@ python3 density_aware_k_anonymity_simulation.py
 **Context:** IoT Smart Cities Privacy Research  
 **Dataset**: Microsoft GeoLife GPS Trajectory Dataset  
 **Date:** January 2026
+
 
