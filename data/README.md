@@ -1,7 +1,7 @@
 # Input Design for Graph-Based Spatiotemporal Privacy Algorithms
 
 This document explains the **standardized input representation** used across all privacy algorithms in this project.  
-The goal is to ensure **one common dataset**, **one data model**, and **consistent comparability** across different privacy techniques.
+The goal is to enforce **one common dataset**, **one data model**, and **strict comparability** across different privacy techniques.
 
 The algorithms covered are:
 
@@ -11,7 +11,7 @@ The algorithms covered are:
 - `graph_constrained_dp`
 - `temporal_cloaking`
 
-All algorithms operate on the **same graph** and the **same trajectory dataset**, differing only in how they transform the data.
+All algorithms operate on the **same city graph** and the **same trajectory dataset**, differing only in how user trajectories are transformed.
 
 ---
 
@@ -19,11 +19,16 @@ All algorithms operate on the **same graph** and the **same trajectory dataset**
 
 The project follows a **graph-based spatiotemporal mobility model**:
 
-- **Graph** represents the _spatial structure_ of the city
-- **Trajectories** represent _user movement over time_
-- **Privacy algorithms** transform trajectories, not the graph
+- The **city graph** represents the spatial structure and movement constraints
+- **Trajectories** represent user movement over time
+- **Privacy algorithms operate only on trajectories**, never on the graph itself
 
-This separation avoids redundancy, improves modularity, and matches standard research practice in trajectory privacy.
+This separation:
+
+- Avoids redundancy
+- Improves modularity
+- Matches standard practice in trajectory privacy research
+- Enables fair, algorithm-to-algorithm comparison
 
 ---
 
@@ -32,35 +37,47 @@ This separation avoids redundancy, improves modularity, and matches standard res
 ```text
 data/
 ├── synthetic/
-│   ├── city_graph.json
+│   ├── city_graph_nodes.json
+│   ├── city_graph_edges.json
 │   └── device_locations.csv
 ```
 
----
+The dataset is explicitly divided into:
 
-This structure is split into:
-
-- **Graph data** (global, public)
+- **Graph data** (global, public, shared)
 - **Trajectory data** (user-specific, sensitive)
 
 ---
 
-## 3. Spatial Model: City Graph (`city_graph.json`)
+## 3. Spatial Model: City Graph
 
-### Purpose:
+The city graph defines **where movement is possible** in the city.
 
-Defines **where movement is possible** in the city.
+Instead of a single monolithic file, the graph is split into **nodes** and **edges** to improve clarity, modular loading, and reuse.
 
-- Nodes represent locations
-- Edges represent valid movement paths
-- Edge attributes store distance and travel time
+Conceptually, the graph is still:
 
-### Conceptual Model
+```text
+G = (V, E)
+```
 
-Graph G = (V, E)
+- **V** → locations
+- **E** → valid movement paths between locations
 
-V → locations (junctions, buildings, grid cells)
-E → paths between locations
+---
+
+## 3.1 Graph Nodes (`city_graph_nodes.json`)
+
+### Purpose
+
+Defines all valid **spatial locations** in the city.
+
+Nodes may represent:
+
+- Road intersections
+- Buildings
+- Regions
+- Grid cells
 
 ### JSON Schema
 
@@ -70,7 +87,37 @@ E → paths between locations
     { "id": "A", "x": 0, "y": 0 },
     { "id": "B", "x": 1, "y": 0 },
     { "id": "C", "x": 1, "y": 1 }
-  ],
+  ]
+}
+```
+
+### Notes
+
+- `id` is a unique node identifier
+- `(x, y)` coordinates are optional but useful for:
+  - Visualization
+  - Spatial generalization
+  - Density-aware algorithms
+- Nodes are shared across all users and all algorithms
+
+---
+
+## 3.2 Graph Edges (`city_graph_edges.json`)
+
+### Purpose
+
+Defines **valid movement paths** between nodes.
+
+Edges encode real-world constraints such as:
+
+- Road connectivity
+- Physical distance
+- Travel time
+
+### JSON Schema
+
+```json
+{
   "edges": [
     {
       "source": "A",
@@ -90,45 +137,50 @@ E → paths between locations
 
 ### Notes
 
-• distance is typically in meters
-
-• travel_time is typically in seconds
-
-• Coordinates (x, y) are optional but useful for visualization and spatial generalization
-
-• The graph is shared by all users and all algorithms
+- `source` and `target` must match node IDs from `city_graph_nodes.json`
+- `distance` is typically measured in meters
+- `travel_time` is typically measured in seconds
+- Edges may be treated as directed or undirected depending on the algorithm
 
 ---
 
-## 4. Spatiotemporal Model: Trajectories (device_locations.csv)
+## 4. Spatiotemporal Model: Trajectories (`device_locations.csv`)
 
 ### Purpose
 
-• Stores user movement observations over time.
+Stores **user movement observations over time**.
 
-• This is the primary sensitive dataset that privacy algorithms operate on.
+This is the **primary sensitive dataset** on which all privacy algorithms operate.
 
-• Canonical Trajectory Definition
+The graph is never modified — **only trajectories are transformed**.
 
-• A trajectory is defined as a time-ordered sequence of locations:
+---
 
-```bash
+### Canonical Trajectory Definition
+
+A trajectory for user _u_ is defined as a time-ordered sequence:
+
+```text
 Trajectory_u = [(v₁, τ₁), (v₂, τ₂), ...]
 ```
 
 Where:
-• v is a node in the graph
 
-• τ is a timestamp
+- `v` is a node ID from the city graph
+- `τ` is a timestamp
+
+---
 
 ### CSV Schema
 
-*Format*
+**Format**
+
 ```text
-user_id,location_id,date,timestamp
+user_id,location_id,timestamp
 ```
 
-*Sample*
+**Sample**
+
 ```text
 1,A,2026-02-01 08:00:00
 1,B,2026-02-01 08:10:00
@@ -137,12 +189,46 @@ user_id,location_id,date,timestamp
 2,C,2026-02-01 08:20:00
 ```
 
+---
+
 ### Important Rules
 
-• location_id must match a node ID in city_graph.json
+- `location_id` must match a node ID in `city_graph_nodes.json`
+- Trajectory order is determined **only by timestamps**
+- Distance is **not stored** in the trajectory
+- Spatial distance and reachability are derived from the graph when needed
+- All privacy algorithms consume this exact format without modification
 
-• Timestamps define trajectory order (row order is not relied upon)
+---
 
-• Distance is not stored in the trajectory
+## 5. Why This Design Matters
 
-• Spatial distance is derived from the graph when needed
+This input design ensures:
+
+- One shared spatial reality (the graph)
+- One shared sensitive dataset (trajectories)
+- Algorithm differences reflect **privacy logic only**, not data inconsistencies
+
+As a result:
+
+- Experimental results are reproducible
+- Privacy guarantees are comparable
+- The system scales cleanly to new algorithms
+
+---
+
+## Summary
+
+This input design establishes a **clean separation between spatial structure and sensitive mobility data**:
+
+- The **city graph** provides a single, shared spatial reality that encodes movement constraints.
+- **Trajectories** capture user behavior over time and are the sole target of privacy transformations.
+- All privacy algorithms consume the **same inputs** and differ only in how they transform trajectories.
+
+As a result, the system guarantees:
+
+- Consistent and reproducible experiments
+- Fair comparison across privacy techniques
+- Modular extensibility for future algorithms
+
+In short: **one graph, one trajectory format, many privacy mechanisms — no ambiguity, no data leakage through design.**
