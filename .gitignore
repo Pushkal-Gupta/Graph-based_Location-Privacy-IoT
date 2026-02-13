@@ -1,13 +1,6 @@
 __pycache__/
+.ipynb_checkpoints/
 *.pyc
-*.png
-*.json
 .env
 .DS_Store
-results/temporal_cloaking/batch*/
-results/k_anonymity/batch*/
-results/differential_privacy/batch*/
-results/graph_constrained_dp/batch*/
-results/density_aware_k_anonymity/batch*/
-tempCodeRunnerFile.py
 .vscode/
