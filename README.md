@@ -130,9 +130,15 @@ graph-based-location-privacy-iot/
 ├── .gitignore
 │
 ├── data/
-│   ├── synthetic/
-│   │   ├── city_graph.json
+│   ├── original_data/
+│   │   ├── README.md
+│   ├── processed_data/
+│   │   ├── city_graph_nodes.json
+│   │   ├── city_graph_edges.json
 │   │   └── device_locations.csv
+│   ├── processing_script/
+│   │   ├── process_geolife.py
+│   │   └── SanityCheck.ipynb
 │   └── README.md
 │
 ├── algorithms/
