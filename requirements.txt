@@ -1,25 +1,23 @@
-# Core dependencies
-numpy>=1.21.0
-pandas>=1.3.0
+# Core numerical stack
+numpy>=1.24
+pandas>=1.5
+scipy>=1.10
 
 # Graph processing
-networkx>=2.6.0
+networkx>=3.0
 
-# Configuration parsing
+# Configuration
 PyYAML>=6.0
 
-# Spatial utilities
-shapely>=1.8.0
-
-# Simulation & metrics
-scipy>=1.7.0
+# Spatial utilities (only if actually used)
+shapely>=2.0
 
 # Visualization
-matplotlib>=3.4.0
-seaborn>=0.11.0
+matplotlib>=3.7
+seaborn>=0.12
 
-# JSON utilities (included in standard library, but explicit if extended)
-jsonschema>=4.0.0
+# Validation
+jsonschema>=4.0
 
-# Optional: progress bar for long simulations
-tqdm>=4.60.0
+# Utilities
+tqdm>=4.65

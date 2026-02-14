@@ -128,6 +128,7 @@ graph-based-location-privacy-iot/
 ├── requirements.txt
 ├── LICENSE
 ├── .gitignore
+├── .gitattributes
 │
 ├── data/
 │   ├── original_data/
