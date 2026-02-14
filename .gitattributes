@@ -1,3 +1,1 @@
-data/device_locations.csv filter=lfs diff=lfs merge=lfs -text
-data/preprocessed[[:space:]]data/device_locations.csv filter=lfs diff=lfs merge=lfs -text
-*.csv filter=lfs diff=lfs merge=lfs -text
+data/processed_data/device_locations.csv filter=lfs diff=lfs merge=lfs -text
