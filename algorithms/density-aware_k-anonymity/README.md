@@ -1,9 +1,3 @@
-Perfect 👍 Since your algorithm has evolved significantly (real processed_data integration, 30×30 grid, percentile-based adaptive k, graph JSON loading, no pickle, real trajectory counts, proper results folder structure), your README must reflect the actual architecture.
-
-Below is your **fully updated, detailed, and consistent README** in the exact same structured format.
-
----
-
 # Density-Aware k-Anonymity for Location Privacy in IoT Smart Cities
 
 ## Project Overview
