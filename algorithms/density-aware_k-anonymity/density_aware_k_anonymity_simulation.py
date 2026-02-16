@@ -1,58 +1,68 @@
-import pickle
 import os
 import matplotlib.pyplot as plt
-from density_aware_k_anonymity import SmartCityGraph, DensityAwareAdaptiveKAnonymityAlgorithm, DensityAwareAdaptiveKAnonymityExperiment
 
-if __name__ == "__main__":
-    bounds = (39.4, 41.0, 115.4, 117.5)
-    
-    city = SmartCityGraph(grid_size=5, user_counts_file='user_counts.pkl', bounds=bounds)
-    
-    print("\n=== USER DISTRIBUTION PER NODE ===")
+from density_aware_k_anonymity import (
+    SmartCityGraph,
+    DensityAwareAdaptiveKAnonymityAlgorithm,
+    DensityAwareAdaptiveKAnonymityExperiment
+)
+
+
+def main():
+
+    city = SmartCityGraph()
+
+    print("=== USER DISTRIBUTION PER NODE ===")
     for node in sorted(city.user_at_node):
         print(f"Node {node}: {city.user_at_node[node]} users")
     print("=================================\n")
-    
+
     algo = DensityAwareAdaptiveKAnonymityAlgorithm(city)
     exp = DensityAwareAdaptiveKAnonymityExperiment(algo, runs=25)
-    
+
     exp.run_simulation()
     exp.print_summary()
-    
-    # ====================== CREATE RESULTS FOLDER ======================
-    results_dir = "results"
-    os.makedirs(results_dir, exist_ok=True)   
 
+    # ========================= FIXED RESULTS PATH =========================
+    base_dir = os.path.dirname(os.path.abspath(__file__))
 
-    # ====================== PLOTS (Saved in results/ folder) ======================
-    # Plot 1: Density vs Adaptive k
+    results_dir = os.path.abspath(
+        os.path.join(base_dir, "../../results/density_aware_k_anonymity")
+    )
+
+    os.makedirs(results_dir, exist_ok=True)
+    # =====================================================================
+
+    # Plot 1
     plt.figure(figsize=(8, 6))
-    plt.scatter(exp.densities, exp.k_values, alpha=0.7, color='blue')
+    plt.scatter(exp.densities, exp.k_values, alpha=0.7)
     plt.xlabel("Local Density")
     plt.ylabel("Adaptive k")
     plt.title("Density vs Adaptive k")
     plt.grid(True, alpha=0.3)
-    plt.savefig(os.path.join(results_dir, "density_vs_k.png"), dpi=300, bbox_inches='tight')
+    plt.savefig(os.path.join(results_dir, "density_vs_k.png"))
     plt.close()
 
-    # Plot 2: k vs Region Size
+    # Plot 2
     plt.figure(figsize=(8, 6))
-    plt.scatter(exp.k_values, exp.region_sizes, alpha=0.7, color='green')
+    plt.scatter(exp.k_values, exp.region_sizes, alpha=0.7)
     plt.xlabel("Adaptive k")
-    plt.ylabel("Region Size (nodes)")
+    plt.ylabel("Region Size")
     plt.title("k vs Region Size")
     plt.grid(True, alpha=0.3)
-    plt.savefig(os.path.join(results_dir, "k_vs_region_size.png"), dpi=300, bbox_inches='tight')
+    plt.savefig(os.path.join(results_dir, "k_vs_region_size.png"))
     plt.close()
 
-    # Plot 3: Region Size Distribution
+    # Plot 3
     plt.figure(figsize=(8, 6))
-    plt.hist(exp.region_sizes, bins=range(1, max(exp.region_sizes)+2), alpha=0.75, color='orange', edgecolor='black')
+    plt.hist(exp.region_sizes, bins=range(1, max(exp.region_sizes) + 2))
     plt.xlabel("Region Size")
     plt.ylabel("Frequency")
-    plt.title("Distribution of Anonymization Region Sizes")
+    plt.title("Region Size Distribution")
     plt.grid(True, alpha=0.3)
-    plt.savefig(os.path.join(results_dir, "region_size_distribution.png"), dpi=300, bbox_inches='tight')
+    plt.savefig(os.path.join(results_dir, "region_size_distribution.png"))
     plt.close()
 
-    # =====================================================================
+
+if __name__ == "__main__":
+    main()
