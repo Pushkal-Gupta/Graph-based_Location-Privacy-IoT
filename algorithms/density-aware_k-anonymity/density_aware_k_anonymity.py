@@ -158,6 +158,8 @@ class DensityAwareAdaptiveKAnonymityExperiment:
         selected = random.sample(nodes, min(self.runs, len(nodes)))
 
         for i, target in enumerate(selected, 1):
+
+            # ONLY ONE density calculation with verbose output
             density = self.algorithm.compute_local_density(
                 target,
                 verbose=True
