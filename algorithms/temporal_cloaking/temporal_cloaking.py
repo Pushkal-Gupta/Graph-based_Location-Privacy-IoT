@@ -1,282 +1,192 @@
-#!/usr/bin/env python3
-"""
-Standard Temporal Cloaking Implementation
-(Abul et al. 2008 style – trajectory-centric)
-
-Author: Naga Sai Dattu
-Date: February 2026
-"""
-
 import os
 import json
 import math
-import csv
+import networkx as nx
+import pandas as pd
+import random
 from collections import defaultdict
 from datetime import datetime, timedelta
 
-import networkx as nx
-import matplotlib.pyplot as plt
+# ==========================================
+# SMART CITY GRAPH (REAL DATASET LOADER)
+# ==========================================
+class SmartCityGraph:
+    def __init__(self, seed=42):
+        if seed is not None:
+            random.seed(seed)
+            
+        # Standardized Path Resolution
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        self.data_dir = os.path.abspath(os.path.join(base_dir, "../../data/processed_data"))
+        
+        self.nodes_path = os.path.join(self.data_dir, "city_graph_nodes.json")
+        self.edges_path = os.path.join(self.data_dir, "city_graph_edges.json")
+        self.locations_path = os.path.join(self.data_dir, "device_locations.csv")
 
+        self.graph = nx.Graph()
+        self.trajectories = defaultdict(list)
+        self.positions = {}
 
-# ============================================================
-# CONFIGURATION
-# ============================================================
-def get_next_batch_dir(base_dir):
-    os.makedirs(base_dir, exist_ok=True)
+        print(f"Loading data from: {self.data_dir}")
+        self._load_nodes()
+        self._load_edges()
+        self._load_trajectories()
 
-    existing = [
-        d for d in os.listdir(base_dir)
-        if os.path.isdir(os.path.join(base_dir, d)) and d.startswith("batch")
-    ]
+    def _load_nodes(self):
+        with open(self.nodes_path, "r") as f:
+            nodes = json.load(f)
+        for node in nodes:
+            nid = int(node["id"])
+            self.graph.add_node(nid, x=node["x"], y=node["y"])
+            self.positions[nid] = (node["x"], node["y"])
 
-    batch_nums = []
-    for d in existing:
-        try:
-            batch_nums.append(int(d.replace("batch", "")))
-        except ValueError:
-            pass
+    def _load_edges(self):
+        with open(self.edges_path, "r") as f:
+            edges = json.load(f)
+        for edge in edges:
+            self.graph.add_edge(
+                int(edge["source"]), 
+                int(edge["target"]),
+                distance=edge.get("distance", 1.0),
+                travel_time=edge.get("travel_time", 1.0)
+            )
 
-    next_batch = max(batch_nums) + 1 if batch_nums else 1
-    batch_dir = os.path.join(base_dir, f"batch{next_batch}")
-    os.makedirs(batch_dir, exist_ok=True)
+    def _load_trajectories(self):
+        df = pd.read_csv(self.locations_path)
+        if "timestamp" in df.columns:
+            df["timestamp"] = pd.to_datetime(df["timestamp"])
+        
+        for _, row in df.iterrows():
+            # Store (location_id, timestamp)
+            self.trajectories[row["user_id"]].append(
+                (int(row["location_id"]), row["timestamp"])
+            )
+        print(f"Loaded {len(self.trajectories)} user trajectories.")
 
-    return batch_dir
+# ==========================================
+# TEMPORAL CLOAKING ALGORITHM
+# ==========================================
+class TemporalCloakingAlgorithm:
+    def __init__(self, city, window_size_minutes=15, k_anonymity=5):
+        self.city = city
+        self.graph = city.graph
+        self.trajectories = city.trajectories
+        self.window_size_minutes = window_size_minutes
+        self.k_anonymity = k_anonymity
 
-USE_DUMMY_DATA = True
+    def compute_centroid(self, node_ids):
+        xs = [self.city.positions[n][0] for n in node_ids]
+        ys = [self.city.positions[n][1] for n in node_ids]
+        return sum(xs) / len(xs), sum(ys) / len(ys)
 
-BASE_RESULTS_DIR = "results/temporal_cloaking"
-RESULTS_DIR = get_next_batch_dir(BASE_RESULTS_DIR)
+    def nearest_graph_node(self, x, y):
+        best_node = None
+        best_dist = float("inf")
+        for n, pos in self.city.positions.items():
+            d = math.dist((x, y), pos)
+            if d < best_dist:
+                best_dist = d
+                best_node = n
+        return best_node
 
-WINDOW_SIZE_MINUTES = 15
-K_ANONYMITY = 3
+    def execute_logic(self):
+        # Flatten all events: (user, loc, time)
+        events = []
+        for user, traj in self.trajectories.items():
+            for loc, ts in traj:
+                events.append((user, loc, ts))
 
+        if not events:
+            return {}, []
 
-# ============================================================
-# DATA LOADING
-# ============================================================
+        # Sort by time
+        events.sort(key=lambda x: x[2])
+        start_time = events[0][2]
+        end_time = events[-1][2]
+        window_delta = timedelta(minutes=self.window_size_minutes)
 
-def load_dummy_graph():
-    G = nx.Graph()
-    G.add_node("A", x=0, y=0)
-    G.add_node("B", x=1, y=0)
-    G.add_node("C", x=1, y=1)
-    G.add_node("D", x=0, y=1)
+        cloaked_output = defaultdict(list)
+        flattened_rows = []
+        current_start = start_time
 
-    G.add_edge("A", "B", distance=1.0)
-    G.add_edge("B", "C", distance=1.0)
-    G.add_edge("C", "D", distance=1.0)
-    G.add_edge("D", "A", distance=1.0)
-
-    return G
-
-
-def load_dummy_trajectories():
-    base = datetime(2026, 2, 1, 8, 0, 0)
-
-    return {
-        1: [("A", base), ("B", base + timedelta(minutes=10)), ("C", base + timedelta(minutes=25))],
-        2: [("B", base + timedelta(minutes=5)), ("C", base + timedelta(minutes=20))],
-        3: [("A", base + timedelta(minutes=7)), ("D", base + timedelta(minutes=22))]
-    }
-
-
-# ------------------------------------------------------------
-# REAL DATA LOADERS (COMMENTED – ENABLE LATER)
-# ------------------------------------------------------------
-
-# def load_graph_from_json(path):
-#     with open(path) as f:
-#         data = json.load(f)
-#     G = nx.Graph()
-#     for node in data["nodes"]:
-#         G.add_node(node["id"], x=node["x"], y=node["y"])
-#     for edge in data["edges"]:
-#         G.add_edge(edge["source"], edge["target"],
-#                    distance=edge["distance"],
-#                    travel_time=edge["travel_time"])
-#     return G
-
-
-# def load_trajectories_from_csv(path):
-#     import pandas as pd
-#     df = pd.read_csv(path)
-#     trajectories = defaultdict(list)
-#     for _, row in df.iterrows():
-#         trajectories[row["user_id"]].append(
-#             (row["location_id"], pd.to_datetime(row["timestamp"]))
-#         )
-#     return trajectories
-
-
-# ============================================================
-# HELPER FUNCTIONS
-# ============================================================
-
-def compute_centroid(nodes, graph):
-    xs = [graph.nodes[n]["x"] for n in nodes]
-    ys = [graph.nodes[n]["y"] for n in nodes]
-    return sum(xs) / len(xs), sum(ys) / len(ys)
-
-
-def nearest_graph_node(x, y, graph):
-    best_node = None
-    best_dist = float("inf")
-    for n, data in graph.nodes(data=True):
-        d = math.dist((x, y), (data["x"], data["y"]))
-        if d < best_dist:
-            best_dist = d
-            best_node = n
-    return best_node
-
-
-# ============================================================
-# TEMPORAL CLOAKING CORE
-# ============================================================
-
-def temporal_cloaking(graph, trajectories):
-    events = []
-
-    for user, traj in trajectories.items():
-        for loc, ts in traj:
-            events.append((user, loc, ts))
-
-    events.sort(key=lambda x: x[2])
-
-    start_time = events[0][2]
-    end_time = events[-1][2]
-    window_size = timedelta(minutes=WINDOW_SIZE_MINUTES)
-
-    cloaked_output = defaultdict(list)
-    flattened_rows = []
-
-    current_start = start_time
-
-    while current_start <= end_time:
-        current_end = current_start + window_size
-        window_events = [e for e in events if current_start <= e[2] < current_end]
-
-        users_in_window = set(e[0] for e in window_events)
-
-        # Temporal expansion if k not satisfied
-        while len(users_in_window) < K_ANONYMITY and current_end <= end_time:
-            current_end += window_size
+        # Process Windows
+        while current_start <= end_time:
+            current_end = current_start + window_delta
+            
+            # 1. Identify users in current window
+            # Filter events strictly within [current_start, current_end)
             window_events = [e for e in events if current_start <= e[2] < current_end]
             users_in_window = set(e[0] for e in window_events)
 
-        if len(users_in_window) >= K_ANONYMITY:
-            locs = [e[1] for e in window_events]
-            cx, cy = compute_centroid(locs, graph)
-            generalized_loc = nearest_graph_node(cx, cy, graph)
+            # 2. Expansion logic for k-anonymity
+            temp_end = current_end
+            
+            # Look ahead until k users are found or data ends
+            while len(users_in_window) < self.k_anonymity and temp_end <= end_time:
+                temp_end += window_delta
+                window_events = [e for e in events if current_start <= e[2] < temp_end]
+                users_in_window = set(e[0] for e in window_events)
+            
+            # 3. Anonymize if condition met
+            if len(users_in_window) >= self.k_anonymity:
+                locs = [e[1] for e in window_events]
+                cx, cy = self.compute_centroid(locs)
+                generalized_loc = self.nearest_graph_node(cx, cy)
+                
+                group_size = len(users_in_window)
+                interval_str = f"{current_start.isoformat()} | {temp_end.isoformat()}"
 
-            for user in users_in_window:
-                cloaked_output[user].append({
-                    "location": generalized_loc,
-                    "time_interval": (current_start.isoformat(), current_end.isoformat()),
-                    "group_size": len(users_in_window)
-                })
+                for user in users_in_window:
+                    cloaked_output[user].append({
+                        "original_events": len([e for e in window_events if e[0] == user]),
+                        "generalized_location": generalized_loc,
+                        "window_start": current_start,
+                        "window_end": temp_end,
+                        "group_size": group_size
+                    })
+                    
+                    flattened_rows.append([
+                        user, generalized_loc, current_start, temp_end, group_size
+                    ])
 
-                flattened_rows.append([
-                    user,
-                    generalized_loc,
-                    current_start.isoformat(),
-                    current_end.isoformat(),
-                    len(users_in_window)
-                ])
+            # Advance Window
+            current_start = max(current_end, temp_end)
 
-        current_start = current_end
+        return cloaked_output, flattened_rows
 
-    return cloaked_output, flattened_rows
+# ==========================================
+# EXPERIMENT CLASS (Standardized)
+# ==========================================
+class TemporalCloakingExperiment:
+    def __init__(self, algorithm):
+        self.algorithm = algorithm
+        self.cloaked_data = {}
+        self.csv_rows = []
+        self.metrics = {}
 
+    def run_simulation(self):
+        print(f"====== Running Temporal Cloaking Experiment ======")
+        print(f"Config: Window={self.algorithm.window_size_minutes}m, k={self.algorithm.k_anonymity}")
+        
+        self.cloaked_data, self.csv_rows = self.algorithm.execute_logic()
+        
+        # Calculate simple metrics for summary
+        total_intervals = len(self.csv_rows)
+        if total_intervals > 0:
+            avg_group_size = sum(r[4] for r in self.csv_rows) / total_intervals
+        else:
+            avg_group_size = 0
+            
+        self.metrics = {
+            "total_users_processed": len(self.cloaked_data),
+            "total_anonymized_intervals": total_intervals,
+            "average_group_size": avg_group_size
+        }
+        
+        print("====== Experiment Complete ======\n")
 
-# ============================================================
-# OUTPUT WRITERS
-# ============================================================
-
-def write_results_json(results):
-    summary = {
-        "total_users": len(results),
-        "window_size_minutes": WINDOW_SIZE_MINUTES,
-        "k": K_ANONYMITY
-    }
-
-    with open(f"{RESULTS_DIR}/temporal_cloaking_results.json", "w") as f:
-        json.dump({"per_user": results, "summary": summary}, f, indent=2)
-
-
-def write_trajectory_csv(rows):
-    with open(f"{RESULTS_DIR}/trajectory_data.csv", "w", newline="") as f:
-        writer = csv.writer(f)
-        writer.writerow([
-            "user_id",
-            "generalized_location",
-            "window_start",
-            "window_end",
-            "group_size"
-        ])
-        writer.writerows(rows)
-
-
-# ============================================================
-# VISUALIZATIONS (MINIMAL BUT CORRECT)
-# ============================================================
-
-def plot_trajectory_comparison(graph, trajectories, cloaked):
-    plt.figure(figsize=(6, 6))
-    pos = {n: (graph.nodes[n]["x"], graph.nodes[n]["y"]) for n in graph.nodes}
-
-    nx.draw(graph, pos, node_color="lightgray", with_labels=True)
-
-    for traj in trajectories.values():
-        nx.draw_networkx_nodes(graph, pos, nodelist=[p[0] for p in traj],
-                               node_color="blue", alpha=0.4)
-
-    for traj in cloaked.values():
-        nx.draw_networkx_nodes(graph, pos,
-                               nodelist=[p["location"] for p in traj],
-                               node_color="red")
-
-    plt.title("Original (Blue) vs Cloaked (Red)")
-    plt.savefig(f"{RESULTS_DIR}/trajectory_comparison.png", dpi=300)
-    plt.close()
-
-
-def plot_dummy_analysis():
-    plt.figure()
-    plt.plot([10, 20, 30], [0.5, 1.0, 1.8])
-    plt.xlabel("Window Size (min)")
-    plt.ylabel("Spatial Error")
-    plt.savefig(f"{RESULTS_DIR}/temporal_analysis.png", dpi=300)
-    plt.close()
-
-    plt.figure()
-    plt.plot([10, 20, 30], [0.2, 0.4, 0.7])
-    plt.xlabel("Spatial Error")
-    plt.ylabel("Privacy Gain")
-    plt.savefig(f"{RESULTS_DIR}/privacy_utility_tradeoff.png", dpi=300)
-    plt.close()
-
-
-# ============================================================
-# MAIN
-# ============================================================
-
-def main():
-    if USE_DUMMY_DATA:
-        graph = load_dummy_graph()
-        trajectories = load_dummy_trajectories()
-    else:
-        raise NotImplementedError("Enable real data loaders when dataset is ready.")
-
-    cloaked, flattened = temporal_cloaking(graph, trajectories)
-
-    write_results_json(cloaked)
-    write_trajectory_csv(flattened)
-
-    plot_trajectory_comparison(graph, trajectories, cloaked)
-    plot_dummy_analysis()
-
-    print("Temporal cloaking completed. Results written to results/temporal_cloaking/")
-
-
-if __name__ == "__main__":
-    main()
+    def print_summary(self):
+        print("=== Experiment Summary ===")
+        print(f"Total Users: {self.metrics['total_users_processed']}")
+        print(f"Total Intervals Generated: {self.metrics['total_anonymized_intervals']}")
+        print(f"Average Anonymity Group Size: {self.metrics['average_group_size']:.2f}")
