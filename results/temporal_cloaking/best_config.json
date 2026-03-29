@@ -1,0 +1,15 @@
+{
+  "k": 3,
+  "window_sec": 600,
+  "window_label": "10 min",
+  "n_records": 189,
+  "avg_location_error": 5757.744814814815,
+  "std_location_error": 5632.971457282221,
+  "p50_location_error": 3927.1400000000003,
+  "p95_location_error": 16126.555999999999,
+  "avg_group_size": 3.0,
+  "avg_temporal_delay": 1095.2380952380952,
+  "max_temporal_delay": 3000.0,
+  "avg_temporal_jump": 2865.6484864864865,
+  "k_satisfaction_rate": 1.0
+}
