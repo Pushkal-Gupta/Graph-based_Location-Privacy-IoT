@@ -18,7 +18,7 @@ All privacy algorithms must operate strictly within the canonical specification 
 All algorithms consume data in the following format:
 
 ```text
-data/
+processed_data/
 ├── city_graph_nodes.json
 ├── city_graph_edges.json
 └── device_locations.csv
