@@ -1,0 +1,20 @@
+{
+  "window_sec": 1200,
+  "window_label": "20 min",
+  "n_records": 1085,
+  "avg_location_error": 2452.0644884792628,
+  "std_location_error": 4482.82095102894,
+  "p50_location_error": 0.0,
+  "p95_location_error": 13196.18999999999,
+  "avg_region_size": 268.98433179723503,
+  "std_region_size": 360.9053193347151,
+  "avg_adaptive_k": 2.9400921658986174,
+  "avg_density": 1.4368663594470046,
+  "density_distribution": {
+    "Sparse": 22,
+    "Medium": 296,
+    "Dense": 767
+  },
+  "avg_temporal_jump": 6526.651639175258,
+  "k_satisfaction_rate": 0.7723502304147466
+}

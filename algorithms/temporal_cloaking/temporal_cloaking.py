@@ -59,8 +59,46 @@ import json
 import csv
 import math
 import heapq
+import bisect
 from collections import defaultdict, deque
 from datetime import datetime, timedelta
+
+
+class LazyDistCache:
+    """Computes Dijkstra shortest paths on-demand and caches them."""
+    def __init__(self, graph):
+        self.graph = graph
+        self.cache = {}
+
+    def get_dist(self, u, v):
+        if u not in self.cache:
+            self.cache[u] = {}
+        if v not in self.cache[u]:
+            self.cache[u][v] = self._single_pair_dijkstra(u, v)
+        return self.cache[u][v]
+
+    def _single_pair_dijkstra(self, source, target):
+        if source == target: 
+            return 0.0
+            
+        dist = {source: 0.0}
+        pq = [(0.0, source)]
+        
+        while pq:
+            d, u = heapq.heappop(pq)
+            if d > dist.get(u, math.inf):
+                continue
+                
+            if u == target:
+                return d
+                
+            for v, w in self.graph.get(u, []):
+                nd = d + w
+                if nd < dist.get(v, math.inf):
+                    dist[v] = nd
+                    heapq.heappush(pq, (nd, v))
+                    
+        return math.inf # Unreachable
 
 
 class TemporalCloaker:
@@ -87,8 +125,8 @@ class TemporalCloaker:
             Minimum group size (anonymity parameter).
         window_sec : int
             Base time window in seconds.
-        dist_cache : dict | None
-            Pre-computed all-pairs shortest-path distances.
+        dist_cache : dict | None | LazyDistCache
+            Pre-computed distances or an instance of LazyDistCache.
         """
         self.k = k
         self.window_sec = window_sec
@@ -98,9 +136,8 @@ class TemporalCloaker:
             self.dist_cache = dist_cache
         else:
             n = len(self.graph)
-            print(f"  Precomputing all-pairs shortest paths ({n} nodes)...")
-            self.dist_cache = _all_pairs_dijkstra(self.graph)
-            print("  Done.")
+            print(f"  Setting up lazy distance cache ({n} nodes)...")
+            self.dist_cache = LazyDistCache(self.graph)
 
     # ------------------------------------------------------------------
     def _load_graph(self, nodes_input, edges_input):
@@ -164,6 +201,10 @@ class TemporalCloaker:
             return []
 
         events.sort(key=lambda x: x[2])
+        
+        # Extract timestamps for fast binary search
+        timestamps = [e[2] for e in events]
+        
         start_time = events[0][2]
         end_time   = events[-1][2]
         base_delta = timedelta(seconds=self.window_sec)
@@ -175,20 +216,25 @@ class TemporalCloaker:
         while cur_start <= end_time:
             cur_end = cur_start + base_delta
 
-            # Collect events in current window
-            window_events = [e for e in events
-                             if cur_start <= e[2] < cur_end]
+            # O(log N) fast slice instead of slow O(N) list comprehension
+            left_idx = bisect.bisect_left(timestamps, cur_start)
+            right_idx = bisect.bisect_left(timestamps, cur_end)
+            window_events = events[left_idx:right_idx]
+            
             users_in_window = set(e[0] for e in window_events)
 
             # Expansion loop [1]: widen window until k users are found
             expansions = 0
             actual_end = cur_end
+            
             while len(users_in_window) < self.k and expansions < max_expand:
                 actual_end += base_delta
                 if actual_end > end_time + base_delta:
                     break
-                window_events = [e for e in events
-                                 if cur_start <= e[2] < actual_end]
+                    
+                # Re-slice with binary search to include new window width
+                right_idx = bisect.bisect_left(timestamps, actual_end)
+                window_events = events[left_idx:right_idx]
                 users_in_window = set(e[0] for e in window_events)
                 expansions += 1
 
@@ -197,8 +243,7 @@ class TemporalCloaker:
                 all_nodes = set(e[1] for e in window_events)
                 cloaked = self._medoid(all_nodes)
 
-                delay_sec = (actual_end - cur_end).total_seconds()
-                delay_sec = max(0.0, delay_sec)
+                delay_sec = max(0.0, (actual_end - cur_end).total_seconds())
 
                 # Each user's last event in the window is the representative
                 user_last = {}
@@ -208,7 +253,10 @@ class TemporalCloaker:
 
                 for user, (orig_node, ts) in user_last.items():
                     orig_node = str(orig_node)
-                    err = self.dist_cache.get(orig_node, {}).get(cloaked, 0.0)
+                    
+                    # Compute distance lazily
+                    err = self.dist_cache.get_dist(orig_node, cloaked)
+                    
                     records.append({
                         "user":           user,
                         "original_node":  orig_node,
@@ -229,29 +277,7 @@ class TemporalCloaker:
 
     # ------------------------------------------------------------------
     def dist(self, u, v):
-        return self.dist_cache[str(u)][str(v)]
+        return self.dist_cache.get_dist(str(u), str(v))
 
     def get_dist_cache(self):
         return self.dist_cache
-
-
-# ----------------------------------------------------------------------
-# All-pairs Dijkstra
-# ----------------------------------------------------------------------
-def _all_pairs_dijkstra(graph):
-    cache = {}
-    for source in graph:
-        dist = {n: math.inf for n in graph}
-        dist[source] = 0.0
-        pq = [(0.0, source)]
-        while pq:
-            d, u = heapq.heappop(pq)
-            if d > dist[u]:
-                continue
-            for v, w in graph[u]:
-                nd = d + w
-                if nd < dist[v]:
-                    dist[v] = nd
-                    heapq.heappush(pq, (nd, v))
-        cache[source] = dist
-    return cache
