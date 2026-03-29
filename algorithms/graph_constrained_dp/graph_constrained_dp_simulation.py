@@ -32,7 +32,7 @@ DATA_DIR    = os.path.join(BASE, "data", "processed_data")
 RESULT_DIR  = os.path.join(BASE, "results", "graph_constrained_dp")
 FIGURE_DIR  = os.path.join(RESULT_DIR, "figures")
 
-TRAJ_INDEX  = os.path.join(DATA_DIR, "device_locations_indexed.jsonl")
+CSV_FILE    = os.path.join(DATA_DIR, "device_locations.csv")
 NODES_FILE  = os.path.join(DATA_DIR, "city_graph_nodes.json")
 EDGES_FILE  = os.path.join(DATA_DIR, "city_graph_edges.json")
 
@@ -51,7 +51,7 @@ plt.rcParams.update({
 
 
 # -----------------------------------------------------------------------
-# Data loading (JSONL buckets — same as k_anonymity)
+# Data loading (CSV with timestamp-based bucketing)
 # -----------------------------------------------------------------------
 def load_graph_data():
     with open(NODES_FILE) as f:
@@ -62,14 +62,21 @@ def load_graph_data():
 
 
 def build_all_buckets():
-    print("Building time-bucket index (single pass through JSONL)...")
+    import csv
+    from datetime import datetime
+
+    print("Building time-bucket index from CSV...")
     all_buckets = {w: defaultdict(dict) for w in TIME_WINDOWS}
-    with open(TRAJ_INDEX) as f:
-        for i, line in enumerate(f):
-            row = json.loads(line)
-            user, node = row["user"], row["node"]
+    with open(CSV_FILE) as f:
+        reader = csv.DictReader(f)
+        for i, row in enumerate(reader):
+            user = row["user_id"]
+            node = str(row["location_id"])
+            ts = datetime.strptime(
+                f"{row['date']} {row['time']}", "%Y-%m-%d %H:%M:%S")
+            epoch = int(ts.timestamp())
             for w in TIME_WINDOWS:
-                all_buckets[w][row[f"t{w}"]][user] = node
+                all_buckets[w][epoch // w][user] = node
             if i % 2_000_000 == 0 and i > 0:
                 print(f"  {i:,} records processed")
 

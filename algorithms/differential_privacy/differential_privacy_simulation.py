@@ -48,7 +48,7 @@ DATA_DIR    = os.path.join(BASE, "data", "processed_data")
 RESULT_DIR  = os.path.join(BASE, "results", "differential_privacy")
 FIGURE_DIR  = os.path.join(RESULT_DIR, "figures")
 
-TRAJ_INDEX  = os.path.join(DATA_DIR, "device_locations_indexed.jsonl")
+CSV_FILE    = os.path.join(DATA_DIR, "device_locations.csv")
 NODES_FILE  = os.path.join(DATA_DIR, "city_graph_nodes.json")
 EDGES_FILE  = os.path.join(DATA_DIR, "city_graph_edges.json")
 
@@ -59,7 +59,6 @@ MAX_SNAPSHOTS  = 300
 WINDOW_LABELS = {60: "1 min", 300: "5 min", 600: "10 min", 1200: "20 min"}
 COLORS        = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]
 
-# Paper-quality matplotlib defaults
 plt.rcParams.update({
     "font.family":      "serif",
     "font.size":        11,
@@ -74,7 +73,7 @@ plt.rcParams.update({
 
 
 # -----------------------------------------------------------------------
-# Data loading  (same JSONL bucket approach as k_anonymity)
+# Data loading  (CSV with timestamp-based bucketing)
 # -----------------------------------------------------------------------
 def load_graph_data():
     with open(NODES_FILE) as f:
@@ -85,16 +84,23 @@ def load_graph_data():
 
 
 def build_all_buckets():
-    """Single pass through JSONL to build temporal snapshots."""
-    print("Building time-bucket index (single pass through JSONL)...")
+    """Read device_locations.csv and build temporal snapshots."""
+    import csv
+    from datetime import datetime
+
+    print("Building time-bucket index from CSV...")
     all_buckets = {w: defaultdict(dict) for w in TIME_WINDOWS}
 
-    with open(TRAJ_INDEX) as f:
-        for i, line in enumerate(f):
-            row = json.loads(line)
-            user, node = row["user"], row["node"]
+    with open(CSV_FILE) as f:
+        reader = csv.DictReader(f)
+        for i, row in enumerate(reader):
+            user = row["user_id"]
+            node = str(row["location_id"])
+            ts = datetime.strptime(
+                f"{row['date']} {row['time']}", "%Y-%m-%d %H:%M:%S")
+            epoch = int(ts.timestamp())
             for w in TIME_WINDOWS:
-                b = row[f"t{w}"]
+                b = epoch // w
                 all_buckets[w][b][user] = node
             if i % 2_000_000 == 0 and i > 0:
                 print(f"  {i:,} records processed")
