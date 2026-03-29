@@ -1,192 +1,257 @@
-import os
+"""
+Trajectory Privacy via Temporal Cloaking on a Road-Network Graph
+=================================================================
+
+References
+----------
+[1] Gruteser, M. & Grunwald, D. (2003). Anonymous Usage of Location-Based
+    Services Through Spatial and Temporal Cloaking.
+    Proc. MobiSys 2003, pp. 31-42.
+    -- Introduces *temporal* cloaking alongside spatial cloaking:
+       a location update is delayed until k other users have reported
+       within the same time interval, preventing timing-based
+       re-identification.  Our algorithm follows this delay-until-k
+       model.
+
+[2] Gedik, B. & Liu, L. (2008). Protecting Location Privacy with
+    Personalized k-Anonymity.
+    IEEE Trans. Mobile Computing, 7(1), 1-18.
+    -- Evaluation framework for cloaking systems: location error
+       and region size as primary metrics.
+
+[3] Chow, C.-Y. & Mokbel, M. F. (2011). Trajectory Privacy in
+    Location-Based Services and Data Publication.
+    ACM SIGKDD Explorations, 13(1), 19-29.
+    -- Formalises trajectory privacy: an attacker who observes
+       anonymised trajectory segments should not be able to link
+       them to a single user.  Temporal cloaking reduces linkability
+       by merging users within time windows.
+
+[4] Xu, T. & Cai, Y. (2009). Exploring Historical Location Data for
+    Anonymity Preservation in Location-Based Services.
+    Proc. INFOCOM 2009, pp. 547-555.
+    -- Shows that temporal correlation of location updates is a major
+       privacy leak; temporal cloaking breaks this correlation.
+
+[5] Mokbel, M. F., Chow, C.-Y., & Aref, W. G. (2006).
+    The New Casper.  Proc. VLDB 2006.
+    -- BFS expansion design reused for the spatial component.
+
+Algorithm: Temporal Window Cloaking with Graph-Based Spatial Merging
+    (Combining temporal delay from [1] with graph cloaking from [5])
+
+    Input : trajectories T = {user_id: [(node, timestamp), ...]},
+            time window Δt (seconds), anonymity parameter k
+    Process:
+      1. Divide the timeline into non-overlapping windows of size Δt
+      2. For each window W = [t, t+Δt):
+           a. Collect all users who report during W
+           b. If |users| < k: expand W forward (increase delay)
+              until k users are found or a timeout is reached
+           c. For all users in the final group:
+              - cloaked_node <- medoid of their node set (graph-aware)
+              - temporal_delay <- |expanded W| - Δt
+      3. Error = graph shortest-path dist(original, cloaked)
+    Output: per-user {original_node, cloaked_node, group_size, delay}
+"""
+
 import json
+import csv
 import math
-import networkx as nx
-import pandas as pd
-import random
-from collections import defaultdict
+import heapq
+from collections import defaultdict, deque
 from datetime import datetime, timedelta
 
-# ==========================================
-# SMART CITY GRAPH (REAL DATASET LOADER)
-# ==========================================
-class SmartCityGraph:
-    def __init__(self, seed=42):
-        if seed is not None:
-            random.seed(seed)
-            
-        # Standardized Path Resolution
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        self.data_dir = os.path.abspath(os.path.join(base_dir, "../../data/processed_data"))
-        
-        self.nodes_path = os.path.join(self.data_dir, "city_graph_nodes.json")
-        self.edges_path = os.path.join(self.data_dir, "city_graph_edges.json")
-        self.locations_path = os.path.join(self.data_dir, "device_locations.csv")
 
-        self.graph = nx.Graph()
-        self.trajectories = defaultdict(list)
-        self.positions = {}
+class TemporalCloaker:
+    """
+    Temporal cloaking for trajectory privacy on a road-network graph.
 
-        print(f"Loading data from: {self.data_dir}")
-        self._load_nodes()
-        self._load_edges()
-        self._load_trajectories()
+    Implements the temporal delay model of Gruteser & Grunwald (2003)
+    [1] on a road-network graph, using medoid-based spatial merging
+    (following the connected-subgraph model of [5]).
 
-    def _load_nodes(self):
-        with open(self.nodes_path, "r") as f:
-            nodes = json.load(f)
-        for node in nodes:
-            nid = int(node["id"])
-            self.graph.add_node(nid, x=node["x"], y=node["y"])
-            self.positions[nid] = (node["x"], node["y"])
+    For each time window, users whose reports fall within the window
+    are grouped; if fewer than k users are present, the window is
+    expanded forward until k users are collected.  All grouped users
+    then report the graph medoid of their node set.
+    """
 
-    def _load_edges(self):
-        with open(self.edges_path, "r") as f:
-            edges = json.load(f)
-        for edge in edges:
-            self.graph.add_edge(
-                int(edge["source"]), 
-                int(edge["target"]),
-                distance=edge.get("distance", 1.0),
-                travel_time=edge.get("travel_time", 1.0)
-            )
+    def __init__(self, nodes, edges, k=5, window_sec=600, dist_cache=None):
+        """
+        Parameters
+        ----------
+        nodes : str | list
+        edges : str | list
+        k : int
+            Minimum group size (anonymity parameter).
+        window_sec : int
+            Base time window in seconds.
+        dist_cache : dict | None
+            Pre-computed all-pairs shortest-path distances.
+        """
+        self.k = k
+        self.window_sec = window_sec
+        self.graph, self.node_coords = self._load_graph(nodes, edges)
 
-    def _load_trajectories(self):
-        df = pd.read_csv(self.locations_path)
-        if "timestamp" in df.columns:
-            df["timestamp"] = pd.to_datetime(df["timestamp"])
-        
-        for _, row in df.iterrows():
-            # Store (location_id, timestamp)
-            self.trajectories[row["user_id"]].append(
-                (int(row["location_id"]), row["timestamp"])
-            )
-        print(f"Loaded {len(self.trajectories)} user trajectories.")
+        if dist_cache is not None:
+            self.dist_cache = dist_cache
+        else:
+            n = len(self.graph)
+            print(f"  Precomputing all-pairs shortest paths ({n} nodes)...")
+            self.dist_cache = _all_pairs_dijkstra(self.graph)
+            print("  Done.")
 
-# ==========================================
-# TEMPORAL CLOAKING ALGORITHM
-# ==========================================
-class TemporalCloakingAlgorithm:
-    def __init__(self, city, window_size_minutes=15, k_anonymity=5):
-        self.city = city
-        self.graph = city.graph
-        self.trajectories = city.trajectories
-        self.window_size_minutes = window_size_minutes
-        self.k_anonymity = k_anonymity
+    # ------------------------------------------------------------------
+    def _load_graph(self, nodes_input, edges_input):
+        if isinstance(nodes_input, str):
+            with open(nodes_input) as f:
+                nodes_input = json.load(f)
+        if isinstance(edges_input, str):
+            with open(edges_input) as f:
+                edges_input = json.load(f)
 
-    def compute_centroid(self, node_ids):
-        xs = [self.city.positions[n][0] for n in node_ids]
-        ys = [self.city.positions[n][1] for n in node_ids]
-        return sum(xs) / len(xs), sum(ys) / len(ys)
+        G, coords = {}, {}
+        for n in nodes_input:
+            nid = str(n["id"])
+            G[nid] = []
+            coords[nid] = (float(n["x"]), float(n["y"]))
+        for e in edges_input:
+            s, t = str(e["source"]), str(e["target"])
+            d = float(e["distance"])
+            if s in G and t in G:
+                G[s].append((t, d))
+                G[t].append((s, d))
+        return G, coords
 
-    def nearest_graph_node(self, x, y):
-        best_node = None
-        best_dist = float("inf")
-        for n, pos in self.city.positions.items():
-            d = math.dist((x, y), pos)
-            if d < best_dist:
-                best_dist = d
-                best_node = n
-        return best_node
+    # ------------------------------------------------------------------
+    def _medoid(self, node_set):
+        """Graph node closest (Euclidean) to the centroid of node_set."""
+        nodes = [str(n) for n in node_set if str(n) in self.node_coords]
+        if not nodes:
+            return str(list(node_set)[0])
+        cx = sum(self.node_coords[n][0] for n in nodes) / len(nodes)
+        cy = sum(self.node_coords[n][1] for n in nodes) / len(nodes)
+        return min(nodes, key=lambda n: (
+            (self.node_coords[n][0] - cx) ** 2 +
+            (self.node_coords[n][1] - cy) ** 2
+        ))
 
-    def execute_logic(self):
-        # Flatten all events: (user, loc, time)
+    # ------------------------------------------------------------------
+    # Core algorithm  [Gruteser & Grunwald 2003, Section 3.2]
+    # ------------------------------------------------------------------
+    def cloak_trajectories(self, trajectories):
+        """
+        Apply temporal cloaking to a set of user trajectories.
+
+        Parameters
+        ----------
+        trajectories : dict
+            {user_id: [(node_id, datetime), ...]}  sorted by time.
+
+        Returns
+        -------
+        records : list[dict]
+            Per-event cloaking records.
+        """
+        # Flatten all events
         events = []
-        for user, traj in self.trajectories.items():
-            for loc, ts in traj:
-                events.append((user, loc, ts))
+        for user, traj in trajectories.items():
+            for node, ts in traj:
+                events.append((user, str(node), ts))
 
         if not events:
-            return {}, []
+            return []
 
-        # Sort by time
         events.sort(key=lambda x: x[2])
         start_time = events[0][2]
-        end_time = events[-1][2]
-        window_delta = timedelta(minutes=self.window_size_minutes)
+        end_time   = events[-1][2]
+        base_delta = timedelta(seconds=self.window_sec)
+        max_expand = 5  # max number of expansions to prevent infinite loops
 
-        cloaked_output = defaultdict(list)
-        flattened_rows = []
-        current_start = start_time
+        records = []
+        cur_start = start_time
 
-        # Process Windows
-        while current_start <= end_time:
-            current_end = current_start + window_delta
-            
-            # 1. Identify users in current window
-            # Filter events strictly within [current_start, current_end)
-            window_events = [e for e in events if current_start <= e[2] < current_end]
+        while cur_start <= end_time:
+            cur_end = cur_start + base_delta
+
+            # Collect events in current window
+            window_events = [e for e in events
+                             if cur_start <= e[2] < cur_end]
             users_in_window = set(e[0] for e in window_events)
 
-            # 2. Expansion logic for k-anonymity
-            temp_end = current_end
-            
-            # Look ahead until k users are found or data ends
-            while len(users_in_window) < self.k_anonymity and temp_end <= end_time:
-                temp_end += window_delta
-                window_events = [e for e in events if current_start <= e[2] < temp_end]
+            # Expansion loop [1]: widen window until k users are found
+            expansions = 0
+            actual_end = cur_end
+            while len(users_in_window) < self.k and expansions < max_expand:
+                actual_end += base_delta
+                if actual_end > end_time + base_delta:
+                    break
+                window_events = [e for e in events
+                                 if cur_start <= e[2] < actual_end]
                 users_in_window = set(e[0] for e in window_events)
-            
-            # 3. Anonymize if condition met
-            if len(users_in_window) >= self.k_anonymity:
-                locs = [e[1] for e in window_events]
-                cx, cy = self.compute_centroid(locs)
-                generalized_loc = self.nearest_graph_node(cx, cy)
-                
-                group_size = len(users_in_window)
-                interval_str = f"{current_start.isoformat()} | {temp_end.isoformat()}"
+                expansions += 1
 
-                for user in users_in_window:
-                    cloaked_output[user].append({
-                        "original_events": len([e for e in window_events if e[0] == user]),
-                        "generalized_location": generalized_loc,
-                        "window_start": current_start,
-                        "window_end": temp_end,
-                        "group_size": group_size
+            if len(users_in_window) >= self.k:
+                # Compute cloaked location (medoid of all nodes in window)
+                all_nodes = set(e[1] for e in window_events)
+                cloaked = self._medoid(all_nodes)
+
+                delay_sec = (actual_end - cur_end).total_seconds()
+                delay_sec = max(0.0, delay_sec)
+
+                # Each user's last event in the window is the representative
+                user_last = {}
+                for user, node, ts in window_events:
+                    if user not in user_last or ts > user_last[user][1]:
+                        user_last[user] = (node, ts)
+
+                for user, (orig_node, ts) in user_last.items():
+                    orig_node = str(orig_node)
+                    err = self.dist_cache.get(orig_node, {}).get(cloaked, 0.0)
+                    records.append({
+                        "user":           user,
+                        "original_node":  orig_node,
+                        "cloaked_node":   cloaked,
+                        "cloaked_coords": self.node_coords.get(cloaked, (0, 0)),
+                        "group_size":     len(users_in_window),
+                        "temporal_delay": delay_sec,
+                        "location_error": err,
+                        "k_achieved":     len(users_in_window),
+                        "window_start":   cur_start,
+                        "window_end":     actual_end,
                     })
-                    
-                    flattened_rows.append([
-                        user, generalized_loc, current_start, temp_end, group_size
-                    ])
 
-            # Advance Window
-            current_start = max(current_end, temp_end)
+            # Advance past the processed window
+            cur_start = max(cur_end, actual_end)
 
-        return cloaked_output, flattened_rows
+        return records
 
-# ==========================================
-# EXPERIMENT CLASS (Standardized)
-# ==========================================
-class TemporalCloakingExperiment:
-    def __init__(self, algorithm):
-        self.algorithm = algorithm
-        self.cloaked_data = {}
-        self.csv_rows = []
-        self.metrics = {}
+    # ------------------------------------------------------------------
+    def dist(self, u, v):
+        return self.dist_cache[str(u)][str(v)]
 
-    def run_simulation(self):
-        print(f"====== Running Temporal Cloaking Experiment ======")
-        print(f"Config: Window={self.algorithm.window_size_minutes}m, k={self.algorithm.k_anonymity}")
-        
-        self.cloaked_data, self.csv_rows = self.algorithm.execute_logic()
-        
-        # Calculate simple metrics for summary
-        total_intervals = len(self.csv_rows)
-        if total_intervals > 0:
-            avg_group_size = sum(r[4] for r in self.csv_rows) / total_intervals
-        else:
-            avg_group_size = 0
-            
-        self.metrics = {
-            "total_users_processed": len(self.cloaked_data),
-            "total_anonymized_intervals": total_intervals,
-            "average_group_size": avg_group_size
-        }
-        
-        print("====== Experiment Complete ======\n")
+    def get_dist_cache(self):
+        return self.dist_cache
 
-    def print_summary(self):
-        print("=== Experiment Summary ===")
-        print(f"Total Users: {self.metrics['total_users_processed']}")
-        print(f"Total Intervals Generated: {self.metrics['total_anonymized_intervals']}")
-        print(f"Average Anonymity Group Size: {self.metrics['average_group_size']:.2f}")
+
+# ----------------------------------------------------------------------
+# All-pairs Dijkstra
+# ----------------------------------------------------------------------
+def _all_pairs_dijkstra(graph):
+    cache = {}
+    for source in graph:
+        dist = {n: math.inf for n in graph}
+        dist[source] = 0.0
+        pq = [(0.0, source)]
+        while pq:
+            d, u = heapq.heappop(pq)
+            if d > dist[u]:
+                continue
+            for v, w in graph[u]:
+                nd = d + w
+                if nd < dist[v]:
+                    dist[v] = nd
+                    heapq.heappush(pq, (nd, v))
+        cache[source] = dist
+    return cache

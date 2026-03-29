@@ -1,291 +1,535 @@
-#!/usr/bin/env python3
 """
-Differential Privacy Location Obfuscation for IoT Smart Cities
-===============================================================
-This implementation demonstrates location privacy using differential privacy
-with Laplace noise addition to coordinate-based location data.
+Evaluation of Differential Privacy Location Obfuscation on GeoLife
+===================================================================
 
-Author: Pushkal Gupta
-Date: January 2026
+Loads the preprocessed GeoLife road-network snapshots and evaluates
+coordinate-based differential privacy (planar Laplace mechanism)
+across a range of ε values and temporal window sizes.  Produces
+publication-quality figures.
+
+Dataset
+-------
+Zheng, Y., Zhang, L., Xie, X., & Ma, W.-Y. (2009). Mining Interesting
+Locations and Travel Sequences from GPS Trajectories. WWW 2009.
+
+Algorithm reference
+-------------------
+See differential_privacy.py for full citation list.  Core mechanism:
+  Dwork et al. (2006) -- Laplace mechanism.
+  Andrés et al. (2013) -- geo-indistinguishability.
+
+Evaluation methodology
+----------------------
+Shokri, R., Theodorakopoulos, G., Le Boudec, J.-Y., & Hubaux, J.-P.
+(2011). Quantifying Location Privacy.  Proc. IEEE S&P 2011.
+  -- Standard evaluation framework for location privacy mechanisms:
+     expected estimation error as the primary privacy metric.
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.patches import Circle
-import random
+import os
 import json
 import math
-from typing import List, Tuple, Dict
+import numpy as np
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+from collections import defaultdict
+
+from differential_privacy import DPLocationObfuscator, _haversine_m
 
 
-# ---------------------------------------------------------------------
-# Differential Privacy Obfuscator
-# ---------------------------------------------------------------------
+# -----------------------------------------------------------------------
+# Configuration
+# -----------------------------------------------------------------------
+_HERE       = os.path.dirname(os.path.abspath(__file__))
+BASE        = os.path.join(_HERE, "..", "..")
+DATA_DIR    = os.path.join(BASE, "data", "processed_data")
+RESULT_DIR  = os.path.join(BASE, "results", "differential_privacy")
+FIGURE_DIR  = os.path.join(RESULT_DIR, "figures")
 
-class DifferentialPrivacyLocationObfuscator:
-    """Implements differential privacy for location data using Laplace mechanism."""
+TRAJ_INDEX  = os.path.join(DATA_DIR, "device_locations_indexed.jsonl")
+NODES_FILE  = os.path.join(DATA_DIR, "city_graph_nodes.json")
+EDGES_FILE  = os.path.join(DATA_DIR, "city_graph_edges.json")
 
-    def __init__(self, epsilon_values: List[float] = [0.1, 0.5, 1.0, 2.0, 5.0]):
-        """
-        Initialize the differential privacy obfuscator.
+TIME_WINDOWS  = [60, 300, 600, 1200]
+EPSILON_VALUES = [0.1, 0.5, 1.0, 2.0, 5.0]
+MAX_SNAPSHOTS  = 300
 
-        Args:
-            epsilon_values: List of privacy budget values (smaller = more private)
-        """
-        self.epsilon_values = epsilon_values
-        self.sensitivity = 1.0  # L1 sensitivity for location coordinates
+WINDOW_LABELS = {60: "1 min", 300: "5 min", 600: "10 min", 1200: "20 min"}
+COLORS        = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd"]
 
-    def add_laplace_noise(self, value: float, epsilon: float) -> float:
-        """
-        Add Laplace noise to a single coordinate value.
-        """
-        scale = self.sensitivity / epsilon
-        noise = np.random.laplace(0, scale)
-        return value + noise
-
-    def obfuscate_location(
-        self, x: float, y: float, epsilon: float
-    ) -> Tuple[float, float]:
-        """
-        Add differential privacy noise to location coordinates.
-        """
-        noisy_x = self.add_laplace_noise(x, epsilon)
-        noisy_y = self.add_laplace_noise(y, epsilon)
-        return noisy_x, noisy_y
-
-    def batch_obfuscate(
-        self, locations: List[Tuple[float, float]], epsilon: float
-    ) -> List[Tuple[float, float]]:
-        """
-        Obfuscate multiple locations with the same privacy parameter.
-        """
-        return [
-            self.obfuscate_location(x, y, epsilon)
-            for x, y in locations
-        ]
+# Paper-quality matplotlib defaults
+plt.rcParams.update({
+    "font.family":      "serif",
+    "font.size":        11,
+    "axes.titlesize":   12,
+    "axes.labelsize":   11,
+    "legend.fontsize":  10,
+    "xtick.labelsize":  10,
+    "ytick.labelsize":  10,
+    "savefig.dpi":      300,
+    "savefig.bbox":     "tight",
+})
 
 
-# ---------------------------------------------------------------------
-# Smart City Simulator
-# ---------------------------------------------------------------------
-
-class IoTSmartCitySimulator:
-    """Simulates IoT devices in a smart city for location privacy testing."""
-
-    def __init__(self, city_size: float = 10.0, num_devices: int = 50):
-        self.city_size = city_size
-        self.num_devices = num_devices
-        self.device_locations = self._generate_device_locations()
-        self.device_types = self._assign_device_types()
-
-    def _generate_device_locations(self) -> List[Tuple[float, float]]:
-        locations = []
-
-        poi_centers = [
-            (2.0, 2.0),
-            (8.0, 3.0),
-            (5.0, 7.0),
-            (3.0, 8.0),
-            (7.0, 8.0),
-        ]
-
-        clustered_devices = int(0.7 * self.num_devices)
-        random_devices = self.num_devices - clustered_devices
-
-        for _ in range(clustered_devices):
-            center = random.choice(poi_centers)
-            x = np.random.normal(center[0], 0.8)
-            y = np.random.normal(center[1], 0.8)
-            x = max(0, min(self.city_size, x))
-            y = max(0, min(self.city_size, y))
-            locations.append((x, y))
-
-        for _ in range(random_devices):
-            x = random.uniform(0, self.city_size)
-            y = random.uniform(0, self.city_size)
-            locations.append((x, y))
-
-        return locations
-
-    def _assign_device_types(self) -> List[str]:
-        device_types = [
-            "smartphone",
-            "vehicle_gps",
-            "smart_camera",
-            "sensor_node",
-            "wearable",
-        ]
-        weights = [0.4, 0.2, 0.15, 0.15, 0.1]
-        return np.random.choice(
-            device_types, size=self.num_devices, p=weights
-        ).tolist()
+# -----------------------------------------------------------------------
+# Data loading  (same JSONL bucket approach as k_anonymity)
+# -----------------------------------------------------------------------
+def load_graph_data():
+    with open(NODES_FILE) as f:
+        nodes = json.load(f)
+    with open(EDGES_FILE) as f:
+        edges = json.load(f)
+    return nodes, edges
 
 
-# ---------------------------------------------------------------------
-# Privacy–Utility Analyzer
-# ---------------------------------------------------------------------
+def build_all_buckets():
+    """Single pass through JSONL to build temporal snapshots."""
+    print("Building time-bucket index (single pass through JSONL)...")
+    all_buckets = {w: defaultdict(dict) for w in TIME_WINDOWS}
 
-class PrivacyUtilityAnalyzer:
-    """Analyzes privacy-utility tradeoffs."""
+    with open(TRAJ_INDEX) as f:
+        for i, line in enumerate(f):
+            row = json.loads(line)
+            user, node = row["user"], row["node"]
+            for w in TIME_WINDOWS:
+                b = row[f"t{w}"]
+                all_buckets[w][b][user] = node
+            if i % 2_000_000 == 0 and i > 0:
+                print(f"  {i:,} records processed")
 
-    @staticmethod
-    def calculate_location_error(
-        original: Tuple[float, float],
-        obfuscated: Tuple[float, float],
-    ) -> float:
-        return math.dist(original, obfuscated)
+    result = {}
+    for w in TIME_WINDOWS:
+        buckets = {b: dict(users) for b, users in all_buckets[w].items()}
+        multi = sum(1 for u in buckets.values() if len(u) >= 2)
+        print(f"  Window {WINDOW_LABELS[w]}: {len(buckets):,} buckets, "
+              f"{multi:,} with >= 2 users")
+        result[w] = buckets
 
-    @staticmethod
-    def calculate_privacy_level(epsilon: float) -> str:
-        if epsilon >= 5.0:
-            return "Low Privacy"
-        elif epsilon >= 2.0:
-            return "Medium Privacy"
-        elif epsilon >= 1.0:
-            return "High Privacy"
-        elif epsilon >= 0.5:
-            return "Very High Privacy"
-        else:
-            return "Maximum Privacy"
-
-    @staticmethod
-    def calculate_utility_loss(errors: List[float]) -> Dict[str, float]:
-        return {
-            "mean_error": np.mean(errors),
-            "median_error": np.median(errors),
-            "std_error": np.std(errors),
-            "max_error": np.max(errors),
-            "min_error": np.min(errors),
-        }
+    print("Index ready.\n")
+    return result
 
 
-# ---------------------------------------------------------------------
-# Simulation
-# ---------------------------------------------------------------------
-
-def run_differential_privacy_simulation():
-    print("Differential Privacy Location Obfuscation for IoT Smart Cities")
-    print("=" * 70)
-
-    city_sim = IoTSmartCitySimulator(city_size=10.0, num_devices=50)
-    dp_obfuscator = DifferentialPrivacyLocationObfuscator()
-    analyzer = PrivacyUtilityAnalyzer()
-
-    print("Smart City Simulation Setup:")
-    print(f" City Size: {city_sim.city_size} x {city_sim.city_size} units")
-    print(f" IoT Devices: {city_sim.num_devices}")
-    print(f" Device Types: {set(city_sim.device_types)}")
-    print(f" Privacy Levels (ε): {dp_obfuscator.epsilon_values}")
-    print("-" * 70)
-
-    results = {
-        "epsilon_values": dp_obfuscator.epsilon_values,
-        "privacy_levels": [],
-        "mean_errors": [],
-        "median_errors": [],
-        "std_errors": [],
-        "utility_metrics": {},
-    }
-
-    for epsilon in dp_obfuscator.epsilon_values:
-        print(f"\nTesting Differential Privacy with ε = {epsilon}")
-
-        obfuscated_locations = dp_obfuscator.batch_obfuscate(
-            city_sim.device_locations, epsilon
-        )
-
-        errors = [
-            analyzer.calculate_location_error(orig, obf)
-            for orig, obf in zip(
-                city_sim.device_locations, obfuscated_locations
-            )
-        ]
-
-        utility_metrics = analyzer.calculate_utility_loss(errors)
-        privacy_level = analyzer.calculate_privacy_level(epsilon)
-
-        results["privacy_levels"].append(privacy_level)
-        results["mean_errors"].append(utility_metrics["mean_error"])
-        results["median_errors"].append(utility_metrics["median_error"])
-        results["std_errors"].append(utility_metrics["std_error"])
-        results[f"epsilon_{epsilon}"] = utility_metrics
-
-        print(f" Privacy Level: {privacy_level}")
-        print(f" Mean Location Error: {utility_metrics['mean_error']:.3f}")
-        print(f" Median Error: {utility_metrics['median_error']:.3f}")
-        print(f" Std Deviation: {utility_metrics['std_error']:.3f}")
-        print(f" Max Error: {utility_metrics['max_error']:.3f}")
-
-    return city_sim, dp_obfuscator, results
+def get_snapshots(all_buckets, window, min_users=2):
+    buckets = all_buckets[window]
+    candidates = sorted(
+        (snap for snap in buckets.values() if len(snap) >= min_users),
+        key=id,
+    )
+    if len(candidates) > MAX_SNAPSHOTS:
+        step = len(candidates) // MAX_SNAPSHOTS
+        candidates = candidates[::step][:MAX_SNAPSHOTS]
+    return candidates
 
 
-# ---------------------------------------------------------------------
-# Visualizations
-# ---------------------------------------------------------------------
+# -----------------------------------------------------------------------
+# Core evaluation
+# -----------------------------------------------------------------------
+def evaluate_all(nodes_json, edges_json, all_buckets):
+    """
+    Run evaluation for all (ε, window) combinations.
+    """
+    print("Evaluating differential privacy across (ε, window) grid...\n")
 
-def create_privacy_visualizations(
-    city_sim: IoTSmartCitySimulator,
-    dp_obfuscator: DifferentialPrivacyLocationObfuscator,
-    results: Dict,
-):
-    fig1, axes = plt.subplots(2, 3, figsize=(18, 12))
-    fig1.suptitle("Differential Privacy Location Obfuscation Comparison")
+    results = {}
 
-    vis_epsilons = dp_obfuscator.epsilon_values
+    for window in TIME_WINDOWS:
+        print(f"--- Time window: {WINDOW_LABELS[window]} ---")
+        snapshots = get_snapshots(all_buckets, window, min_users=2)
+        print(f"  Snapshots to evaluate: {len(snapshots)}")
+        if not snapshots:
+            continue
 
-    for idx, epsilon in enumerate(vis_epsilons):
-        ax = axes[idx // 3, idx % 3]
+        for eps in EPSILON_VALUES:
+            obf = DPLocationObfuscator(nodes_json, edges_json, epsilon=eps)
 
-        obfuscated_locs = dp_obfuscator.batch_obfuscate(
-            city_sim.device_locations, epsilon
-        )
+            errors, temporal_jumps = [], []
+            total = 0
+            last_noisy = {}  # user_id -> previous noisy coords
 
-        orig_x, orig_y = zip(*city_sim.device_locations)
-        obf_x, obf_y = zip(*obfuscated_locs)
+            for snap in snapshots:
+                res = obf.anonymize_snapshot(snap)
 
-        ax.scatter(orig_x, orig_y, c="blue", alpha=0.7, label="Original")
-        ax.scatter(obf_x, obf_y, c="red", alpha=0.7, label="Obfuscated")
+                for uid, data in res.items():
+                    errors.append(data["location_error"])
 
-        for i in range(min(10, len(orig_x))):
-            ax.plot(
-                [orig_x[i], obf_x[i]],
-                [orig_y[i], obf_y[i]],
-                color="gray",
-                alpha=0.5,
-            )
+                    if uid in last_noisy:
+                        prev = last_noisy[uid]
+                        cur  = data["noisy_coords"]
+                        temporal_jumps.append(
+                            _haversine_m(prev[0], prev[1], cur[0], cur[1])
+                        )
 
-        privacy_level = PrivacyUtilityAnalyzer.calculate_privacy_level(epsilon)
-        mean_error = results["mean_errors"][idx]
+                    last_noisy[uid] = data["noisy_coords"]
+                    total += 1
 
-        ax.set_title(
-            f"ε = {epsilon} ({privacy_level})\nMean Error: {mean_error:.2f}"
-        )
-        ax.set_xlim(-1, city_sim.city_size + 1)
-        ax.set_ylim(-1, city_sim.city_size + 1)
-        ax.grid(True)
-        ax.legend()
+            if total == 0:
+                continue
+
+            errors.sort()
+            entry = {
+                "epsilon":             eps,
+                "window_sec":          window,
+                "window_label":        WINDOW_LABELS[window],
+                "n_records":           total,
+                "avg_location_error":  float(np.mean(errors)),
+                "std_location_error":  float(np.std(errors)),
+                "p50_location_error":  float(np.percentile(errors, 50)),
+                "p95_location_error":  float(np.percentile(errors, 95)),
+                "avg_temporal_jump":   float(np.mean(temporal_jumps))
+                                       if temporal_jumps else 0.0,
+                "_error_samples":      errors[::max(1, len(errors) // 500)],
+            }
+            results[(eps, window)] = entry
+
+            print(f"  ε={eps}: err={entry['avg_location_error']:.0f} m  "
+                  f"p95={entry['p95_location_error']:.0f} m")
+
+        print()
+
+    return results
+
+
+# -----------------------------------------------------------------------
+# Figure 1 -- Spatial Obfuscation Visualisation
+# -----------------------------------------------------------------------
+def fig_spatial_obfuscation(nodes_json, edges_json, all_buckets,
+                             window=300, epsilon=1.0):
+    print("  Generating Fig 1: spatial obfuscation visualisation...")
+    obf = DPLocationObfuscator(nodes_json, edges_json, epsilon=epsilon)
+    coords = obf.node_coords
+
+    snap = None
+    for candidate in get_snapshots(all_buckets, window, min_users=4):
+        if len(candidate) >= 4:
+            snap = dict(list(candidate.items())[:30])
+            break
+    if snap is None:
+        print("  Skipping Fig 1: no suitable snapshot found.")
+        return
+
+    result = obf.anonymize_snapshot(snap)
+    tracked = list(result.keys())[0]
+
+    # Build edge lines for context
+    with open(EDGES_FILE) as f:
+        edges_raw = json.load(f)
+    active_nodes = {str(n) for n in snap.values()}
+    edge_lines = [
+        (str(e["source"]), str(e["target"]))
+        for e in edges_raw
+        if str(e["source"]) in active_nodes or str(e["target"]) in active_nodes
+    ]
+
+    def draw_bg(ax):
+        ax.set_facecolor("#1a1a2e")
+        for s, t in edge_lines:
+            if s in coords and t in coords:
+                ax.plot([coords[s][0], coords[t][0]],
+                        [coords[s][1], coords[t][1]],
+                        color="#3a3a5e", lw=0.7, alpha=0.8, zorder=1)
+        ax.set_xlabel("Longitude")
+        ax.set_ylabel("Latitude")
+
+    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+
+    # Left: true locations
+    ax = axes[0]
+    draw_bg(ax)
+    for uid, node in snap.items():
+        n = str(node)
+        if n not in coords:
+            continue
+        c = "#ff4444" if uid == tracked else "#00ccff"
+        s = 120 if uid == tracked else 45
+        ax.scatter(coords[n][0], coords[n][1], s=s, c=c, zorder=4,
+                   edgecolors="white", linewidths=0.5)
+    ax.set_title("(a)  True Locations — No Privacy", fontweight="bold")
+    ax.legend(handles=[
+        mpatches.Patch(color="#ff4444", label="Tracked user"),
+        mpatches.Patch(color="#00ccff", label="Other users"),
+    ], loc="best", framealpha=0.8)
+
+    # Right: DP-obfuscated locations
+    ax = axes[1]
+    draw_bg(ax)
+    for uid, data in result.items():
+        ox, oy = data["original_coords"]
+        nx_, ny_ = data["noisy_coords"]
+        c_orig = "#ff4444" if uid == tracked else "#00ccff"
+        c_noisy = "#ff8888" if uid == tracked else "#ffff66"
+        ax.scatter(ox, oy, s=30, c=c_orig, alpha=0.4, zorder=3)
+        ax.scatter(nx_, ny_, s=60, c=c_noisy, marker="*", zorder=5,
+                   edgecolors="black", linewidths=0.4)
+        ax.plot([ox, nx_], [oy, ny_], color="gray", lw=0.5,
+                alpha=0.5, zorder=2)
+    ax.set_title(f"(b)  DP-Obfuscated (ε = {epsilon})", fontweight="bold")
+    ax.legend(handles=[
+        plt.Line2D([0], [0], marker="o", color="w",
+                   markerfacecolor="#00ccff", markersize=7, alpha=0.5,
+                   label="Original"),
+        plt.Line2D([0], [0], marker="*", color="w",
+                   markerfacecolor="#ffff66", markersize=11,
+                   label="Noisy"),
+    ], loc="best", framealpha=0.8)
 
     plt.tight_layout()
-    plt.savefig("dp_location_obfuscation_demo.png", dpi=300)
+    path = os.path.join(FIGURE_DIR, "fig1_spatial_obfuscation.png")
+    plt.savefig(path)
+    plt.close()
+    print(f"    Saved: {path}")
 
-    return fig1
+
+# -----------------------------------------------------------------------
+# Figure 2 -- Location Error vs ε
+# -----------------------------------------------------------------------
+def fig_error_vs_epsilon(results):
+    print("  Generating Fig 2: location error vs ε...")
+    fig, ax = plt.subplots(figsize=(7, 4.5))
+
+    for i, window in enumerate(TIME_WINDOWS):
+        eps_list, means, stds = [], [], []
+        for eps in EPSILON_VALUES:
+            if (eps, window) in results:
+                r = results[(eps, window)]
+                eps_list.append(eps)
+                means.append(r["avg_location_error"])
+                stds.append(r["std_location_error"])
+        if not eps_list:
+            continue
+        means = np.array(means)
+        stds  = np.array(stds)
+        ax.plot(eps_list, means, marker="o", color=COLORS[i], linewidth=2,
+                label=f"Δt = {WINDOW_LABELS[window]}")
+        ax.fill_between(eps_list, means - stds, means + stds,
+                        color=COLORS[i], alpha=0.12)
+
+    ax.set_xscale("log")
+    ax.set_xlabel("Privacy Budget ε")
+    ax.set_ylabel("Location Error (metres)")
+    ax.set_title("Location Error vs ε  [Privacy–Utility Tradeoff]")
+    ax.legend()
+    ax.grid(True, alpha=0.35)
+
+    path = os.path.join(FIGURE_DIR, "fig2_error_vs_epsilon.png")
+    plt.savefig(path)
+    plt.close()
+    print(f"    Saved: {path}")
 
 
-# ---------------------------------------------------------------------
+# -----------------------------------------------------------------------
+# Figure 3 -- Privacy-Utility Tradeoff Scatter
+# -----------------------------------------------------------------------
+def fig_privacy_utility(results):
+    print("  Generating Fig 3: privacy-utility tradeoff...")
+    fig, ax = plt.subplots(figsize=(7, 5))
+
+    for i, window in enumerate(TIME_WINDOWS):
+        privs, utils, lbls = [], [], []
+        for eps in EPSILON_VALUES:
+            if (eps, window) in results:
+                r = results[(eps, window)]
+                privs.append(1.0 / eps)  # higher = more private
+                utils.append(1.0 / (1.0 + r["avg_location_error"]))
+                lbls.append(f"ε={eps}")
+        if not privs:
+            continue
+        ax.plot(privs, utils, marker="o", color=COLORS[i], linewidth=1.5,
+                linestyle="--", label=f"Δt = {WINDOW_LABELS[window]}")
+        for p, u, lbl in zip(privs, utils, lbls):
+            ax.annotate(lbl, (p, u), textcoords="offset points",
+                        xytext=(4, 4), fontsize=8, color=COLORS[i])
+
+    ax.set_xlabel("Privacy Strength  (1/ε)")
+    ax.set_ylabel("Utility Score  1/(1 + location error)")
+    ax.set_title("Privacy-Utility Tradeoff  [Differential Privacy]")
+    ax.legend()
+    ax.grid(True, alpha=0.35)
+
+    path = os.path.join(FIGURE_DIR, "fig3_privacy_utility.png")
+    plt.savefig(path)
+    plt.close()
+    print(f"    Saved: {path}")
+
+
+# -----------------------------------------------------------------------
+# Figure 4 -- CDF of Location Errors
+# -----------------------------------------------------------------------
+def fig_error_cdf(results):
+    print("  Generating Fig 4: CDF of location errors...")
+
+    best_window = max(
+        TIME_WINDOWS,
+        key=lambda w: sum(
+            results[(eps, w)]["n_records"]
+            for eps in EPSILON_VALUES if (eps, w) in results
+        )
+    )
+
+    fig, ax = plt.subplots(figsize=(7, 4.5))
+    for i, eps in enumerate(EPSILON_VALUES):
+        if (eps, best_window) not in results:
+            continue
+        samples = sorted(results[(eps, best_window)]["_error_samples"])
+        cdf = np.arange(1, len(samples) + 1) / len(samples)
+        ax.plot(samples, cdf, color=COLORS[i], linewidth=2,
+                label=f"ε = {eps}")
+
+    ax.set_xlabel("Location Error (metres)")
+    ax.set_ylabel("Cumulative Probability")
+    ax.set_title(
+        f"CDF of Location Errors  (Δt = {WINDOW_LABELS[best_window]})")
+    ax.set_xlim(left=0)
+    ax.set_ylim(0, 1.02)
+    ax.legend()
+    ax.grid(True, alpha=0.35)
+
+    path = os.path.join(FIGURE_DIR, "fig4_error_cdf.png")
+    plt.savefig(path)
+    plt.close()
+    print(f"    Saved: {path}")
+
+
+# -----------------------------------------------------------------------
+# Figure 5 -- Heatmap: avg error for each (ε, window) pair
+# -----------------------------------------------------------------------
+def fig_heatmap(results):
+    print("  Generating Fig 5: error heatmap...")
+    matrix = np.full((len(EPSILON_VALUES), len(TIME_WINDOWS)), np.nan)
+    for i, eps in enumerate(EPSILON_VALUES):
+        for j, w in enumerate(TIME_WINDOWS):
+            if (eps, w) in results:
+                matrix[i, j] = results[(eps, w)]["avg_location_error"]
+
+    fig, ax = plt.subplots(figsize=(7, 4.5))
+    im = ax.imshow(matrix, aspect="auto", cmap="YlOrRd", origin="lower")
+
+    ax.set_xticks(range(len(TIME_WINDOWS)))
+    ax.set_xticklabels([WINDOW_LABELS[w] for w in TIME_WINDOWS])
+    ax.set_yticks(range(len(EPSILON_VALUES)))
+    ax.set_yticklabels([str(e) for e in EPSILON_VALUES])
+    ax.set_xlabel("Time Window (Δt)")
+    ax.set_ylabel("Privacy Budget ε")
+    ax.set_title("Avg Location Error (metres) by ε and Time Window")
+
+    vmax = float(np.nanmax(matrix))
+    for i in range(len(EPSILON_VALUES)):
+        for j in range(len(TIME_WINDOWS)):
+            if not np.isnan(matrix[i, j]):
+                txt_color = "white" if matrix[i, j] > 0.55 * vmax else "black"
+                ax.text(j, i, f"{matrix[i, j]:.0f}",
+                        ha="center", va="center",
+                        fontsize=9, color=txt_color)
+
+    plt.colorbar(im, ax=ax, label="Location Error (m)")
+    plt.tight_layout()
+
+    path = os.path.join(FIGURE_DIR, "fig5_heatmap.png")
+    plt.savefig(path)
+    plt.close()
+    print(f"    Saved: {path}")
+
+
+# -----------------------------------------------------------------------
+# Composite utility score  (for best-config selection)
+# -----------------------------------------------------------------------
+def _utility_score(r):
+    privacy = 1.0 / r["epsilon"]
+    utility = 1.0 / (1.0 + r["avg_location_error"]
+                      + 0.5 * r["avg_temporal_jump"])
+    return privacy * utility
+
+
+# -----------------------------------------------------------------------
+# Analysis report
+# -----------------------------------------------------------------------
+def write_analysis(results):
+    best = max(results.values(), key=_utility_score)
+
+    lines = [
+        "# Differential Privacy Evaluation — GeoLife Dataset\n\n",
+        "## Metrics per (ε, Time Window)\n\n",
+        "| ε | Δt | Avg Error (m) | Median (m) |"
+        " P95 (m) | Temp Jump | Records |\n",
+        "|---|-----|---------------|------------|"
+        "---------|-----------|----------|\n",
+    ]
+    for r in sorted(results.values(),
+                    key=lambda x: (x["window_sec"], x["epsilon"])):
+        lines.append(
+            f"| {r['epsilon']} | {r['window_label']} "
+            f"| {r['avg_location_error']:.1f} "
+            f"| {r['p50_location_error']:.1f} "
+            f"| {r['p95_location_error']:.1f} "
+            f"| {r['avg_temporal_jump']:.1f} "
+            f"| {r['n_records']} |\n"
+        )
+
+    lines += [
+        f"\n## Best Configuration (privacy-utility score)\n\n",
+        f"- **ε** = {best['epsilon']}\n",
+        f"- **Δt** = {best['window_label']}\n",
+        f"- Avg location error: {best['avg_location_error']:.1f} m\n",
+    ]
+
+    with open(os.path.join(RESULT_DIR, "analysis.md"), "w") as f:
+        f.writelines(lines)
+
+
+# -----------------------------------------------------------------------
 # Main
-# ---------------------------------------------------------------------
+# -----------------------------------------------------------------------
+def run():
+    os.makedirs(RESULT_DIR, exist_ok=True)
+    os.makedirs(FIGURE_DIR, exist_ok=True)
 
-def main():
-    city_sim, dp_obfuscator, results = run_differential_privacy_simulation()
+    print("Loading graph data...")
+    nodes_json, edges_json = load_graph_data()
+    print(f"  {len(nodes_json)} nodes, {len(edges_json)} edges\n")
 
-    create_privacy_visualizations(city_sim, dp_obfuscator, results)
+    all_buckets = build_all_buckets()
 
-    with open("dp_simulation_results.json", "w") as f:
-        json.dump(results, f, indent=2)
+    print("=== Evaluation ===")
+    results = evaluate_all(nodes_json, edges_json, all_buckets)
 
-    print("\nSimulation completed successfully.")
-    plt.show()
+    if not results:
+        print("ERROR: No results produced -- check data files.")
+        return
+
+    # Persist results
+    serializable = {
+        f"eps{r['epsilon']}_w{r['window_sec']}": {
+            k: v for k, v in r.items() if not k.startswith("_")
+        }
+        for r in results.values()
+    }
+    with open(os.path.join(RESULT_DIR, "results.json"), "w") as f:
+        json.dump(serializable, f, indent=2)
+
+    best = max(results.values(), key=_utility_score)
+    best_save = {k: v for k, v in best.items() if not k.startswith("_")}
+    with open(os.path.join(RESULT_DIR, "best_config.json"), "w") as f:
+        json.dump(best_save, f, indent=2)
+
+    write_analysis(results)
+
+    # Figures
+    print("\n=== Figures ===")
+    fig_spatial_obfuscation(nodes_json, edges_json, all_buckets,
+                            window=300, epsilon=1.0)
+    fig_error_vs_epsilon(results)
+    fig_privacy_utility(results)
+    fig_error_cdf(results)
+    fig_heatmap(results)
+
+    print(f"\n=== Done ===")
+    print(f"Results  -> {RESULT_DIR}")
+    print(f"Figures  -> {FIGURE_DIR}")
+    print(f"Best config: ε={best['epsilon']}, "
+          f"Δt={best['window_label']}, "
+          f"avg error={best['avg_location_error']:.1f} m")
 
 
 if __name__ == "__main__":
-    main()
+    run()
