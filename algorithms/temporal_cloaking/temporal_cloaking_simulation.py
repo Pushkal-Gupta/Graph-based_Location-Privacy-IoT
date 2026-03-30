@@ -223,7 +223,7 @@ def fig_spatial(nodes_json, edges_json, dist_cache, trajectories,
     ax.set_title(f"(b)  Temporal Cloaking (k={k}, Δt={WINDOW_LABELS[window_sec]})",
                  fontweight="bold")
     ax.legend(handles=[
-        plt.Line2D([0], [0], marker="*", color="w",
+        plt.Line2D([0], [0], marker="*", color="w", # type: ignore
                    markerfacecolor="#ffff66", markersize=11,
                    label="Cloaked location"),
     ], loc="best", framealpha=0.8)
