@@ -1,0 +1,16 @@
+\begin{table}[t]
+\centering
+\caption{Formal Privacy Metrics (window = 10\,min)}
+\label{tab:privacy}
+\begin{tabular}{lcccc}
+\toprule
+Algorithm & Privacy Param. & Privacy Score & $k$-Sat. Rate & Avg Error (m) \\
+\midrule
+  k-Anonymity & $k=3$ & 0.500 & 100.00% & 1189 \\
+  Differential Privacy & $\varepsilon=1.0$ & 0.411 & 100\% & 1545 \\
+  Graph-Constrained DP & $\varepsilon=1.0$ & 0.411 & 100\% & 1843 \\
+  Density-Aware k-Anon & adaptive $k\approx2.95$ & 0.370 & 75.37% & 2546 \\
+  Temporal Cloaking & $k=3$ (group) & 1.000 & 100.00% & 5758 \\
+\bottomrule
+\end{tabular}
+\end{table}

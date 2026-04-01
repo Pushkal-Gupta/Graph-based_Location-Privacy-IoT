@@ -7,18 +7,20 @@ Single entry point that executes all five location-privacy algorithms
 in sequence on the GeoLife dataset.  Each algorithm produces its own
 results under results/<algorithm>/.
 
-After this script completes, run evaluation.py to generate cross-algorithm
-comparisons.
+After all simulations complete, this script automatically runs the deep
+analysis (Privacy, Availability, Energy) and produces all figures, tables,
+and reports under evaluation/deep_analysis/ and paper/.
 
 Usage
 -----
     python3 run_all.py              # run all
     python3 run_all.py --only k_anonymity differential_privacy
     python3 run_all.py --skip temporal_cloaking
+    python3 run_all.py --no-eval    # skip evaluation step
 
 Pipeline
 --------
-    run_all.py  ->  results/  ->  evaluation.py  ->  paper/
+    run_all.py  ->  results/  ->  evaluation/deep_analysis.py  ->  paper/
 """
 
 import os
@@ -118,6 +120,9 @@ def main():
     parser.add_argument(
         "--skip", nargs="+", default=None,
         help="Skip these algorithms.")
+    parser.add_argument(
+        "--no-eval", action="store_true",
+        help="Skip the evaluation/deep_analysis step after simulations.")
     args = parser.parse_args()
 
     # Determine which algorithms to run
@@ -149,9 +154,35 @@ def main():
         status = "OK" if info["success"] else "FAILED"
         print(f"  {name:35s}  {status:8s}  {info['time']:7.1f}s")
     print(f"{'=' * 70}")
-    print(f"  Total time: {total_elapsed:.1f}s")
-    print(f"\n  Next step: python3 evaluation.py")
+    print(f"  Total simulation time: {total_elapsed:.1f}s")
     print(f"{'=' * 70}")
+
+    # Run deep analysis unless skipped or all simulations failed
+    if args.no_eval:
+        print(f"\n  Evaluation skipped (--no-eval).")
+        return
+
+    any_success = any(v["success"] for v in summary.values())
+    if not any_success:
+        print(f"\n  Skipping evaluation — no simulations succeeded.")
+        return
+
+    print(f"\n{'=' * 70}")
+    print("  RUNNING EVALUATION: Privacy | Availability | Energy | Statistics")
+    print(f"{'=' * 70}\n")
+    eval_path = os.path.join(_HERE, "evaluation", "deep_analysis.py")
+    try:
+        eval_start = time.time()
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("deep_analysis", eval_path)
+        mod  = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        mod.run()
+        print(f"\n  Evaluation completed in {time.time() - eval_start:.1f}s.")
+    except Exception as e:
+        print(f"\n  ERROR in evaluation: {e}")
+        import traceback
+        traceback.print_exc()
 
 
 if __name__ == "__main__":

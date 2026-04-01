@@ -3,9 +3,9 @@
   "window_sec": 1200,
   "window_label": "20 min",
   "n_records": 1085,
-  "avg_location_error": 15390.044573605937,
-  "std_location_error": 11542.01042529725,
-  "p50_location_error": 12656.99297268066,
-  "p95_location_error": 38024.023887541465,
-  "avg_temporal_jump": 23677.32394316249
+  "avg_location_error": 15349.651042506379,
+  "std_location_error": 11312.829977967831,
+  "p50_location_error": 12798.216877475155,
+  "p95_location_error": 37333.73603363576,
+  "avg_temporal_jump": 23973.299802204172
 }

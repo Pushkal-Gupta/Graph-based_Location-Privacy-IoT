@@ -1,0 +1,22 @@
+# Pairwise Welch t-test significance and Cohen d effect size (window=10min)
+algorithm_row,algorithm_col,p_value,significance,cohens_d,effect_magnitude
+k-Anonymity,Differential Privacy,0.000370,***,0.1896,negligible
+k-Anonymity,Graph-Constrained DP,0.000000,***,0.3239,small
+k-Anonymity,Density-Aware k-Anon,0.000000,***,0.3595,small
+k-Anonymity,Temporal Cloaking,0.000000,***,1.3409,large
+Differential Privacy,k-Anonymity,0.000370,***,0.1896,negligible
+Differential Privacy,Graph-Constrained DP,0.000000,***,0.2287,small
+Differential Privacy,Density-Aware k-Anon,0.000000,***,0.3079,small
+Differential Privacy,Temporal Cloaking,0.000000,***,1.7240,large
+Graph-Constrained DP,k-Anonymity,0.000000,***,0.3239,small
+Graph-Constrained DP,Differential Privacy,0.000000,***,0.2287,small
+Graph-Constrained DP,Density-Aware k-Anon,0.000002,***,0.2115,small
+Graph-Constrained DP,Temporal Cloaking,0.000000,***,1.5031,large
+Density-Aware k-Anon,k-Anonymity,0.000000,***,0.3595,small
+Density-Aware k-Anon,Differential Privacy,0.000000,***,0.3079,small
+Density-Aware k-Anon,Graph-Constrained DP,0.000002,***,0.2115,small
+Density-Aware k-Anon,Temporal Cloaking,0.000000,***,0.6887,medium
+Temporal Cloaking,k-Anonymity,0.000000,***,1.3409,large
+Temporal Cloaking,Differential Privacy,0.000000,***,1.7240,large
+Temporal Cloaking,Graph-Constrained DP,0.000000,***,1.5031,large
+Temporal Cloaking,Density-Aware k-Anon,0.000000,***,0.6887,medium

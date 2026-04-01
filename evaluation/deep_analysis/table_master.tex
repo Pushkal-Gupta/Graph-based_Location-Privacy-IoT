@@ -1,0 +1,17 @@
+\begin{table*}[!t]
+\centering
+\caption{Comprehensive Algorithm Comparison: Privacy, Availability, and Energy(GeoLife Dataset, $w$=10\,min representative configuration)}
+\label{tab:master}
+\begin{tabular}{l|ccc|rrrr|r}
+\toprule
+\multirow{2}{*}{\textbf{Algorithm}} & \multicolumn{3}{c|}{\textbf{Dimension Scores [0--1]}} & \multicolumn{4}{c|}{\textbf{Location Error (m)}} & \textbf{Energy} \\
+ & Privacy & Availability & Energy Eff. & Mean & Median & P95 & Temp. Jump & (mJ/report) \\
+\midrule
+  k-Anonymity & 0.500 & 0.745 & 0.907 & 1189 & 0 & 6747 & 6150 & 5.57 \\
+  Differential Privacy & 0.411 & 1.000 & 1.000 & 1545 & 1297 & 3568 & 6590 & 5.05 \\
+  Graph-Constrained DP & 0.411 & 1.000 & 0.994 & 1843 & 1705 & 4455 & 8465 & 5.08 \\
+  Density-Aware k-Anon & 0.370 & 0.754 & 0.590 & 2546 & 0 & 13431 & 6453 & 8.56 \\
+  Temporal Cloaking & 1.000 & 0.185 & 1.000 & 5758 & 3927 & 16127 & 2866 & 5.05 \\
+\bottomrule
+\end{tabular}
+\end{table*}

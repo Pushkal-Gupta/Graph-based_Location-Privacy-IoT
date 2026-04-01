@@ -1,12 +1,12 @@
 {
   "epsilon": 0.1,
-  "window_sec": 1200,
-  "window_label": "20 min",
-  "n_records": 1085,
-  "avg_location_error": 13891.624184331798,
-  "std_location_error": 7772.490675796732,
-  "p50_location_error": 12970.199999999999,
-  "p95_location_error": 27752.208000000006,
-  "avg_projection_dist": 5077.8884330720875,
-  "avg_temporal_jump": 19850.542896907224
+  "window_sec": 300,
+  "window_label": "5 min",
+  "n_records": 945,
+  "avg_location_error": 13911.505492063494,
+  "std_location_error": 7275.099164350123,
+  "p50_location_error": 12891.090000000002,
+  "p95_location_error": 27073.582000000002,
+  "avg_projection_dist": 4924.838253078409,
+  "avg_temporal_jump": 20499.2738968825
 }

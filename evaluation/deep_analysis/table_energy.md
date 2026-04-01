@@ -1,0 +1,9 @@
+<!-- IoT Energy Model Per-Report Breakdown (window=10min) -->
+
+| Algorithm            | E_radio (mJ) | E_compute (mJ) | E_retrans (mJ) | E_success (mJ) |
+| -------------------- | ------------ | -------------- | -------------- | -------------- |
+| k-Anonymity          | 5.00         | 0.5662         | 0.00           | 5.57           |
+| Differential Privacy | 5.00         | 0.0500         | 0.00           | 5.05           |
+| Graph-Constrained DP | 5.00         | 0.0806         | 0.00           | 5.08           |
+| Density-Aware k-Anon | 5.00         | 0.8325         | 0.62           | 8.56           |
+| Temporal Cloaking    | 5.00         | 0.0500         | 0.00           | 5.05           |
