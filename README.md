@@ -1,7 +1,5 @@
 # Spatio-temporal Privacy Graph-Based Approaches for Location Privacy in IoT Smart Cities
 
-# Privacy Graph-Based Approaches for Location Privacy in IoT Smart Cities
-
 ## Overview
 
 Smart cities rely on large-scale IoT deployments such as smartphones, connected vehicles, cameras, and environmental sensors. These devices continuously generate fine-grained spatial and temporal data that can unintentionally reveal sensitive user information such as home locations, workplaces, and detailed mobility patterns.
