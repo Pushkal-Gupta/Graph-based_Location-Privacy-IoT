@@ -67,6 +67,7 @@ ALGO_NAMES = {
     "graph_constrained_dp":      "Graph-Constrained DP",
     "density_aware_k_anonymity": "Density-Aware k-Anon",
     "temporal_cloaking":         "Temporal Cloaking",
+    "adaptive_hybrid":           "DA-Hybrid (ours)",
 }
 ALGO_SHORT = {
     "k_anonymity":               "k-Anon",
@@ -74,6 +75,7 @@ ALGO_SHORT = {
     "graph_constrained_dp":      "GC-DP",
     "density_aware_k_anonymity": "DA-kAnon",
     "temporal_cloaking":         "TempCloak",
+    "adaptive_hybrid":           "DA-Hybrid",
 }
 COLORS = {
     "k_anonymity":               "#1f77b4",
@@ -81,6 +83,7 @@ COLORS = {
     "graph_constrained_dp":      "#2ca02c",
     "density_aware_k_anonymity": "#ff7f0e",
     "temporal_cloaking":         "#9467bd",
+    "adaptive_hybrid":           "#17becf",
 }
 MARKERS = {
     "k_anonymity":               "o",
@@ -88,6 +91,7 @@ MARKERS = {
     "graph_constrained_dp":      "^",
     "density_aware_k_anonymity": "D",
     "temporal_cloaking":         "P",
+    "adaptive_hybrid":           "*",
 }
 WINDOW_LABELS = {60: "1 min", 300: "5 min", 600: "10 min", 900: "15 min", 1200: "20 min"}
 
@@ -161,6 +165,17 @@ def privacy_score(metrics, algo_key):
         sat = metrics.get("k_satisfaction_rate", 1.0)
         return (gs / K_TC) * sat
 
+    elif algo_key == "adaptive_hybrid":
+        # Blended: k-anon guarantee where the cloak branch fires, plus the
+        # eps-DP guarantee of the fallback branch, weighted by branch usage.
+        k        = metrics.get("k", 3)
+        kanon_f  = metrics.get("kanon_fraction", 0.5)
+        gcdp_f   = metrics.get("gcdp_fraction", 0.5)
+        eps      = metrics.get("epsilon", 1.0)
+        lmin, lmax = math.log(EPS_MIN), math.log(EPS_MAX)
+        dp_priv  = (lmax - math.log(eps)) / (lmax - lmin)
+        return kanon_f * (k / K_MAX) + gcdp_f * dp_priv
+
     return 0.0
 
 
@@ -181,8 +196,10 @@ def availability_score(metrics, algo_key):
 
     service_rate = min(n / base, 1.0)
 
-    if algo_key in ("differential_privacy", "graph_constrained_dp"):
-        # DP serves every user with a perturbed location; k_sat not applicable
+    if algo_key in ("differential_privacy", "graph_constrained_dp",
+                    "adaptive_hybrid"):
+        # These serve every user (DP fallback for the hybrid); k_sat not a
+        # gate on availability -- the report is always delivered on-graph.
         return service_rate
     else:
         # k-anon variants: must also satisfy the privacy guarantee
@@ -222,6 +239,12 @@ def energy_metrics(metrics, algo_key):
         E_cmp  = 0.05 + 2.5 * region  # BFS traversal cost
     elif algo_key == "temporal_cloaking":
         E_cmp = 0.05          # simple windowing (server-side batching)
+    elif algo_key == "adaptive_hybrid":
+        # BFS in the cloak branch (region-size driven) + cheap projection in
+        # the fallback branch, weighted by how often each branch fires.
+        region  = metrics.get("avg_region_size", 40) / 900
+        kanon_f = metrics.get("kanon_fraction", 0.5)
+        E_cmp   = 0.05 + kanon_f * 2.5 * region + (1 - kanon_f) * 0.08
     else:
         E_cmp = 0.10
 

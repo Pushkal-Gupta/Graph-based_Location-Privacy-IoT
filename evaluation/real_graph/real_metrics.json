@@ -1,0 +1,44 @@
+{
+  "k_anonymity": {
+    "name": "k-Anonymity",
+    "error": 2517.4143801515206,
+    "avail": 0.7735849056603774,
+    "snap_AE": 3125.1340274450913,
+    "traj_AE": 2430.7613102782857
+  },
+  "differential_privacy": {
+    "name": "Differential Privacy",
+    "error": 414.4176220363828,
+    "avail": 1.0,
+    "snap_AE": 824.33038022983,
+    "traj_AE": 1135.3055358562876
+  },
+  "graph_constrained_dp": {
+    "name": "Graph-Constrained DP",
+    "error": 932.8988031351341,
+    "avail": 1.0,
+    "snap_AE": 780.1070462592743,
+    "traj_AE": 1105.3677059030788
+  },
+  "density_aware_k_anonymity": {
+    "name": "Density-Aware k-Anon",
+    "error": 2040.1908086620786,
+    "avail": 0.7169811320754716,
+    "snap_AE": 2076.8636397835594,
+    "traj_AE": 2428.99066324897
+  },
+  "adaptive_hybrid": {
+    "name": "DA-Hybrid (ours)",
+    "error": 663.9327025503483,
+    "avail": 1.0,
+    "snap_AE": 595.1783654554835,
+    "traj_AE": 1133.029983531345
+  },
+  "temporal_cloaking": {
+    "name": "Temporal Cloaking",
+    "error": 4475.174155875252,
+    "avail": 0.898876404494382,
+    "snap_AE": 3962.9664186816035,
+    "traj_AE": 3694.400476841737
+  }
+}

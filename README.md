@@ -252,7 +252,42 @@ python3 temporal_cloaking_simulation.py
 All algorithms can be executed together using a unified runner:
 
 ```bash
-python3 experiments/run_all.py
+python3 run_all.py
+```
+
+---
+
+## Revised Evaluation Pipeline (v2)
+
+The revised evaluation adds an adversary-grounded privacy metric, a new
+density-adaptive hybrid mechanism, real road-network topology, a second dataset,
+and an energy-model sensitivity analysis. See `REVISION_NOTES.md` for the
+point-by-point response to the reviews.
+
+```bash
+# 1. New mechanism (registered in run_all.py):
+python3 algorithms/adaptive_hybrid/adaptive_hybrid_simulation.py
+
+# 2. Adversary-grounded privacy (snapshot + trajectory adversaries, in metres):
+python3 evaluation/run_adversarial.py          # -> results/<algo>/adversary.json
+
+# 3. Energy-model sensitivity across radio technologies (BLE..LTE-M):
+python3 evaluation/energy_sensitivity.py
+
+# 4. Unified comparison table + dual-threat & Pareto figures:
+python3 evaluation/unified_comparison.py       # -> paper/figures, paper/tables
+
+# 5. Real road-network topology (build graph, map-match, re-run):
+python3 data/processing_script/build_real_graph.py         # OSM Beijing graph
+python3 data/processing_script/process_geolife_real.py     # GeoLife -> real nodes
+python3 evaluation/run_real_graph.py                       # GeoLife on real graph
+
+# 6. Second dataset (T-Drive), same real graph:
+python3 data/processing_script/process_tdrive.py
+python3 evaluation/run_real_graph.py --dataset tdrive
+
+# 7. Cross-topology / cross-dataset ranking-stability comparison:
+python3 evaluation/topology_dataset_comparison.py
 ```
 
 ---

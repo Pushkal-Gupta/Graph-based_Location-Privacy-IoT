@@ -1,0 +1,12 @@
+{
+  "w600": {
+    "snapshot_adv_error_m": 4256.112731707318,
+    "snapshot_adv_error_p50_m": 852.11,
+    "snapshot_adv_error_p95_m": 17118.226,
+    "snapshot_reid_rate": 0.48292682926829267,
+    "n_reports": 205,
+    "trajectory_adv_error_m": 5562.68969602929,
+    "trajectory_reid_rate": 0.23517406962785112,
+    "n_tracked_users": 7
+  }
+}

@@ -56,6 +56,10 @@ ALGORITHMS = {
         "dir":    os.path.join(_HERE, "algorithms", "temporal_cloaking"),
         "module": "temporal_cloaking_simulation",
     },
+    "adaptive_hybrid": {
+        "dir":    os.path.join(_HERE, "algorithms", "adaptive_hybrid"),
+        "module": "adaptive_hybrid_simulation",
+    },
 }
 
 

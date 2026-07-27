@@ -1,0 +1,18 @@
+\begin{table*}[t]
+\centering
+\caption{Unified comparison under adversary-grounded privacy (expected Bayesian-adversary error, metres; higher is more private) for snapshot and trajectory threat models. Window $=10$\,min.}
+\label{tab:unified}
+\begin{tabular}{lrrrrccc}
+\toprule
+Mechanism & Snap.\ AE & Traj.\ AE & Avail. & Loc.\ Err & On-graph & $E_{\mathrm{LoRa}}$ & $E_{\mathrm{BLE}}$ \\
+ & (m) & (m) & & (m) & & (mJ) & (mJ) \\
+\midrule
+k-Anonymity & 5193 & 5141 & 74\% & 1189 & yes & 5.57 & 0.62 \\
+Differential Privacy & 1651 & 1893 & 100\% & 1569 & no & 5.05 & 0.10 \\
+Graph-Constrained DP & 1829 & 1915 & 100\% & 1890 & yes & 5.16 & 0.21 \\
+Density-Aware k-Anon & 4256 & 5563 & 78\% & 2427 & yes & 5.78 & 0.83 \\
+Temporal Cloaking & 6376 & 5037 & 19\% & 5758 & yes & 5.05 & 0.10 \\
+\textbf{DA-Hybrid (ours)} & 1441 & 1707 & 100\% & 1117 & yes & 5.10 & 0.15 \\
+\bottomrule
+\end{tabular}
+\end{table*}

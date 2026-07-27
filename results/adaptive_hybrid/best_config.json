@@ -1,0 +1,17 @@
+{
+  "k": 5,
+  "epsilon": 1.0,
+  "window_sec": 300,
+  "window_label": "5 min",
+  "n_records": 945,
+  "avg_location_error": 1835.3426349206352,
+  "std_location_error": 1616.2510353829457,
+  "p50_location_error": 1703.98,
+  "p95_location_error": 4779.72,
+  "avg_temporal_jump": 6788.326182583936,
+  "avg_region_size": 5.611111111111111,
+  "k_satisfaction_rate": 0.01904761904761905,
+  "service_rate": 1.0,
+  "kanon_fraction": 0.01904761904761905,
+  "gcdp_fraction": 0.9809523809523809
+}

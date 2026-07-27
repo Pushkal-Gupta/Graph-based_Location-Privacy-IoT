@@ -1,0 +1,12 @@
+{
+  "k3_w600": {
+    "snapshot_adv_error_m": 6375.743641542728,
+    "snapshot_adv_error_p50_m": 4187.47,
+    "snapshot_adv_error_p95_m": 20160.280000000006,
+    "snapshot_reid_rate": 0.28085455003781196,
+    "n_reports": 79340,
+    "trajectory_adv_error_m": 5037.034114911188,
+    "trajectory_reid_rate": 0.4117548372866945,
+    "n_tracked_users": 144
+  }
+}
