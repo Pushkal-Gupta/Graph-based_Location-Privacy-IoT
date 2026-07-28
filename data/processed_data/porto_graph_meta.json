@@ -1,0 +1,15 @@
+{
+  "bbox": {
+    "min_lat": 41.08,
+    "max_lat": 41.25,
+    "min_lon": -8.72,
+    "max_lon": -8.52
+  },
+  "utm_crs": "EPSG:32629",
+  "n_nodes": 3455,
+  "n_edges": 5249,
+  "tolerance_m": 50,
+  "degree_mean": 3.03849493487699,
+  "degree_max": 43,
+  "dead_ends": 933
+}

@@ -1,7 +1,8 @@
 mechanism,snapshot_AE_m,trajectory_AE_m,availability,location_error_m
-k-Anonymity,236.3,580.4,1.0000,106.8
-Differential Privacy,660.4,407.6,1.0000,454.2
-Graph-Constrained DP,690.7,431.3,1.0000,809.3
-Density-Aware k-Anon,273.9,556.2,1.0000,128.4
-DA-Hybrid (ours),135.0,1154.0,1.0000,62.0
+k-Anonymity,236.3,580.4,1.0000,104.6
+Differential Privacy,665.9,411.8,1.0000,452.9
+Graph-Constrained DP,685.1,422.2,1.0000,813.1
+Density-Aware k-Anon,273.9,556.2,1.0000,127.2
+DA-Hybrid (ours),135.1,1154.0,1.0000,61.0
+MIRAGE (ours),645.5,480.8,1.0000,798.4
 Temporal Cloaking,6177.8,8387.9,1.0000,6459.6

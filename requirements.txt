@@ -1,23 +1,14 @@
 # Core numerical stack
 numpy>=1.24
 pandas>=1.5
-scipy>=1.10
+scipy>=1.10          # HiGHS LP solver (MIRAGE), csgraph Dijkstra, bootstrap stats
 
 # Graph processing
 networkx>=3.0
 
-# Configuration
-PyYAML>=6.0
-
-# Spatial utilities (only if actually used)
-shapely>=2.0
+# Real road networks + GPS map-matching
+osmnx>=2.0           # build real OSM drive graphs
+pyproj>=3.5          # WGS84 <-> UTM projection for nearest-node snapping
 
 # Visualization
 matplotlib>=3.7
-seaborn>=0.12
-
-# Validation
-jsonschema>=4.0
-
-# Utilities
-tqdm>=4.65

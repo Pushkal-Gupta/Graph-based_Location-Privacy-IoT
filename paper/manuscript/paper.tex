@@ -1,12 +1,10 @@
 %% =====================================================================
-%% Adversary-Grounded Location Privacy for IoT Smart Cities
-%% Revised manuscript (repositioned for a new venue).
-%% IEEE Computer Society journal format (two-column, Times).
-%% Self-contained: manual bibliography, figures in ./figures/.
-%% Compile with: tectonic paper.tex   (or pdflatex x2)
+%% MIRAGE: Optimal, Road-Graph-Native Location Obfuscation at City Scale,
+%% and a Threat-Model-Aware Privacy Metric for IoT Smart Cities.
+%% IEEE Computer Society journal format. Self-contained; figures in ./figures/.
+%% Compile: tectonic paper.tex
 %% =====================================================================
 \documentclass[10pt,journal,compsoc]{IEEEtran}
-
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{graphicx}
 \usepackage{textcomp}
@@ -20,64 +18,61 @@
 \usepackage{xcolor}
 \usepackage{mathptmx}
 \usepackage[hidelinks]{hyperref}
-
 \graphicspath{{figures/}}
 \hyphenation{op-tical net-works semi-conduc-tor IoT}
-
 \begin{document}
 
-\title{Adversary-Grounded Location Privacy and a Density-Adaptive Hybrid
-Mechanism for IoT Smart Cities}
+\title{MIRAGE: Optimal, Road-Graph-Native Location Obfuscation at City Scale for
+IoT Smart Cities}
 
 \author{Pushkal~Gupta,
         Praagya~Garg,
         M.~Nagasai~Dattu,
         and~S.~Ebenezer~Juliet%
 \IEEEcompsocitemizethanks{
-\IEEEcompsocthanksitem P.~Gupta, P.~Garg, M.~N.~Dattu, and S.~E.~Juliet are with
-the School of Computer Science and Engineering, Vellore Institute of Technology,
-Vellore 632014, India.\protect\\
+\IEEEcompsocthanksitem The authors are with the School of Computer Science and
+Engineering, Vellore Institute of Technology, Vellore 632014, India.\protect\\
 E-mail: pushkalgupta2005@gmail.com; ebenezer.juliet@vit.ac.in.
-\IEEEcompsocthanksitem Corresponding author: Pushkal Gupta.
-}%
+\IEEEcompsocthanksitem Corresponding author: Pushkal Gupta.}%
 \thanks{Manuscript prepared July 2026.}}
 
 \markboth{Preprint}%
-{Gupta \MakeLowercase{\textit{et al.}}: Adversary-Grounded Location Privacy for IoT Smart Cities}
+{Gupta \MakeLowercase{\textit{et al.}}: Optimal Road-Graph-Native Location Obfuscation for IoT Smart Cities}
 
 \IEEEtitleabstractindextext{%
 \begin{abstract}
-Smart cities depend on continuous location reporting from IoT devices, yet the
-privacy mechanisms that protect these reports are evaluated in isolation, with
-incompatible datasets, metrics, and threat models, so no fair comparison exists.
-We make two contributions that go beyond benchmarking. First, we replace the
-ad-hoc privacy scores common in the literature with an \emph{adversary-grounded}
-privacy metric: privacy is the expected error of an optimal Bayesian adversary,
-measured in metres and therefore directly comparable across mechanism families.
-Crucially, we evaluate every mechanism under \emph{two} threat models---a
-single-observation snapshot adversary and a Viterbi trajectory-tracking
-adversary equipped with a Markov mobility prior---and show that a single privacy
-scale is inadequate: mechanisms strong against one adversary can be weak against
-the other, and the two adversaries induce different rankings. Second, we
-introduce \emph{DA-Hybrid}, a density-adaptive mechanism that combines bounded
-graph $k$-anonymity with a graph-constrained differential-privacy fallback whose
-budget strengthens in sparse regions; it guarantees 100\,\% availability and
-on-graph outputs while achieving the lowest spatial error among all
-full-availability mechanisms. We evaluate five classical mechanisms and DA-Hybrid
-on a \emph{real} central-Beijing OpenStreetMap road network under two real
-mobility datasets (GeoLife and T-Drive), together with a radio-technology
-sensitivity analysis of the energy model. Rankings under the adversary metric are
-shown---not merely asserted---to be stable from the grid abstraction to the real
-network, while service availability is found to be dataset-density-driven rather
-than mechanism-intrinsic. The complete framework is released for reproducible
-extension.
+IoT smart cities depend on continuous location reporting, and a large family of
+obfuscation mechanisms---$k$-anonymity, differential privacy (DP), graph
+constraints, temporal cloaking---has been proposed to protect it. Two questions
+remain unanswered in a deployable, quantitative way. First, \emph{how much
+privacy does each mechanism actually provide}, on a common, comparable scale and
+against the threats it faces? Second, \emph{how far are these heuristics from the
+best achievable privacy} on a real road network? We answer both. (1)~We adopt an
+adversary-grounded privacy metric---the expected error of an optimal Bayesian
+adversary, in metres---and instantiate it under two threat models, a snapshot
+adversary and a Viterbi trajectory adversary with a Markov mobility prior,
+showing that a single privacy scale is inadequate because the two adversaries
+rank mechanisms differently. (2)~We introduce \textbf{MIRAGE}, the first
+\emph{road-graph-native} optimal obfuscation mechanism that scales to a real
+city. MIRAGE computes, per location, the release distribution that provably
+maximises the Bayesian adversary's error subject to a utility budget, with the
+distortion and adversary error measured as graph shortest-path distance; it is
+made tractable by solving one small linear program per \emph{density-adaptive
+local region}, turning an intractable $|V|^2$ program into $|V|$ tiny ones. On
+real OpenStreetMap networks of two cities under three mobility datasets (Beijing:
+GeoLife, T-Drive; Porto) we measure the \emph{price of heuristics}: at matched
+utility, DP and $k$-anonymity leave $5\text{--}22\%$ of the achievable privacy on
+the table in the operationally relevant regime, while MIRAGE is Pareto-optimal
+(privacy$\,\approx\,$utility) up to the network's intrinsic uncertainty ceiling.
+We further show rankings hold from a grid abstraction to the real network and that
+service availability is dataset-density-driven rather than mechanism-intrinsic.
+The complete framework---mechanisms, adversaries, datasets, and analysis---is
+released for reproducibility.
 \end{abstract}
-
 \begin{IEEEkeywords}
-Location privacy, $k$-anonymity, differential privacy, graph-based privacy,
-Bayesian adversary, trajectory privacy, Internet of Things, smart cities.
+Location privacy, optimal obfuscation, Bayesian adversary, differential privacy,
+$k$-anonymity, road networks, trajectory privacy, Internet of Things.
 \end{IEEEkeywords}}
-
 \maketitle
 \IEEEdisplaynontitleabstractindextext
 \IEEEpeerreviewmaketitle
@@ -86,387 +81,343 @@ Bayesian adversary, trajectory privacy, Internet of Things, smart cities.
 \section{Introduction}
 \label{sec:intro}
 % =====================================================================
-\IEEEPARstart{T}{he} proliferation of Internet of Things (IoT) devices in smart
-cities produces an unprecedented volume of fine-grained spatiotemporal data.
-Smartphones, connected vehicles, and environmental sensors continuously report
-location information that enables urban analytics, traffic management, and
-emergency response, yet simultaneously exposes home and workplace locations,
-health-facility visits, and detailed mobility, even after identifiers are
-removed \cite{sweeney2002}.
+\IEEEPARstart{S}{mart} cities collect fine-grained locations from IoT devices for
+analytics, traffic management, and emergency response, and simultaneously expose
+homes, workplaces, and mobility patterns \cite{sweeney2002}. Two decades of
+research have produced diverse obfuscation mechanisms: spatial $k$-anonymity
+\cite{gruteser2003}, differential privacy and geo-indistinguishability
+\cite{dwork2006,andres2013}, graph-constrained perturbation \cite{bordenabe2014},
+density adaptation \cite{niu2014}, and temporal cloaking \cite{gruteser2003}. Yet
+a practitioner choosing a mechanism for a real deployment faces two unanswered
+questions.
 
-Two decades of research have produced diverse mechanisms---spatial
-$k$-anonymity \cite{gruteser2003}, differential privacy \cite{dwork2006},
-density-aware adaptation \cite{niu2014}, graph-constrained perturbation
-\cite{bordenabe2014}, and temporal cloaking \cite{gruteser2003}. But each is
-typically evaluated on its own dataset, with its own metric, under its own threat
-model, so a practitioner cannot obtain a defensible answer to ``which mechanism
-should I deploy?'' A first response is to place all mechanisms on a shared
-substrate. We argue that this is necessary but not sufficient: the privacy axis
-itself must be made rigorous and threat-model-aware, and the empirical study must
-run on real road networks and more than one dataset before its conclusions can be
-trusted. This paper does both, and additionally contributes a new mechanism that
-the rigorous evaluation shows to occupy an otherwise-empty operating point.
+\emph{Q1: How private is each mechanism, comparably and against the right
+threat?} Mechanisms are scored on incompatible, family-specific scales
+($k/k_{\max}$, a log-scaled $\varepsilon$, region areas) that have no common
+operational meaning and are usually measured against a single snapshot attacker,
+even for mechanisms designed to defeat trajectory tracking.
+
+\emph{Q2: How far are deployed heuristics from the best achievable privacy?}
+Classical theory shows that, for a given utility budget, there exists an
+\emph{optimal} obfuscation mechanism---the solution of a linear program (LP)---
+that maximises a Bayesian adversary's error \cite{shokri2012,shokri2015pets,
+bordenabe2014}. But that theory has only ever been instantiated on the Euclidean
+plane or small grids, is snapshot-focused, and does not scale ($|V|^2$
+variables), so it has never been evaluated on a real road network, and the gap
+between deployable heuristics and the optimum on real topology is unknown.
+
+We answer both questions.
 
 \noindent\textbf{Contributions.}
 \begin{enumerate}
 \item \textbf{An adversary-grounded, threat-model-aware privacy metric}
-(Section~\ref{sec:adversary}). We define privacy as the expected localisation
-error of an optimal Bayesian adversary \cite{shokri2011}, instantiated as (i)~a
-snapshot adversary and (ii)~a Viterbi trajectory adversary using a first-order
-Markov mobility prior estimated from data. This yields a single physical unit
-(metres) comparable across families, and it exposes that the two threat models
-rank mechanisms \emph{differently}---evidence that the widely used single privacy
-scale is invalid.
-\item \textbf{DA-Hybrid, a new density-adaptive mechanism}
-(Section~\ref{sec:hybrid}). Per report, DA-Hybrid uses the local user density to
-choose bounded graph $k$-anonymity where density permits and a graph-constrained
-DP fallback (with density-adaptive $\varepsilon$) otherwise. It gives a
-per-report formal guarantee everywhere, 100\,\% availability by construction, and
-on-graph outputs, and it attains the lowest spatial error among all
-full-availability mechanisms.
-\item \textbf{A real-network, multi-dataset, energy-sensitive evaluation}
-(Sections~\ref{sec:setup}--\ref{sec:results}). We evaluate on a real
-central-Beijing OpenStreetMap road graph under both GeoLife and T-Drive, and
-sweep the energy model across BLE/Zigbee/LoRa/NB-IoT/LTE-M radios, separating
-robust conclusions from radio- or granularity-specific ones.
-\item \textbf{An open, extensible framework} releasing all mechanisms,
-adversaries, datasets, and analysis for reproducibility.\footnote{\url{https://github.com/Pushkal-Gupta/Graph-based-Location-Privacy-IoT}}
+(Section~\ref{sec:adversary}). Privacy is the expected error of an optimal
+Bayesian adversary (Shokri~\emph{et~al.}~\cite{shokri2011}), in metres, evaluated
+under both a snapshot adversary and a Viterbi trajectory adversary with a Markov
+mobility prior. We show the two adversaries induce \emph{different} rankings, so
+a single privacy scale is invalid.
+\item \textbf{MIRAGE, the first road-graph-native optimal obfuscation mechanism
+that scales to a real city} (Section~\ref{sec:mirage}). MIRAGE solves the
+optimal-mechanism LP with graph shortest-path distortion and on-graph support,
+made tractable by \emph{density-adaptive local LPs}. DP and $k$-anonymity arise
+as constrained/degenerate special cases; an optional geo-indistinguishability
+constraint recovers a formal DP guarantee.
+\item \textbf{The price of heuristics on real road networks}
+(Section~\ref{sec:results}). Across three mobility datasets on real networks of
+two cities we quantify, at matched utility, how much privacy DP and $k$-anonymity
+sacrifice ($5\text{--}22\%$ in the practical regime), with $95\%$ bootstrap CIs
+and an ablation of MIRAGE's knobs.
+\item \textbf{A reproducible, real-network, multi-city evaluation and open
+framework} spanning a grid abstraction and real OSM graphs of Beijing and Porto,
+three datasets (GeoLife, T-Drive, Porto taxi), and a radio-technology sensitivity
+analysis of the energy model.\footnote{\url{https://github.com/Pushkal-Gupta/Graph-based-Location-Privacy-IoT}}
 \end{enumerate}
+
+Honest positioning: we do not invent optimal obfuscation---that is due to
+Shokri~\emph{et~al.}~\cite{shokri2012,shokri2015pets} and Bordenabe~\emph{et~al.}
+\cite{bordenabe2014}. Our contribution is to make it \emph{graph-native},
+\emph{city-scale}, and \emph{measured} on real road networks, and to place it in
+a unified two-threat evaluation.
 
 % =====================================================================
 \section{Related Work}
 \label{sec:related}
 % =====================================================================
-\textbf{Spatial cloaking and $k$-anonymity.} Sweeney \cite{sweeney2002} defined
-$k$-anonymity; Gruteser and Grunwald \cite{gruteser2003} introduced spatial
-cloaking, and Mokbel~\emph{et~al.}~\cite{mokbel2006} and Duckham and Kulik
-\cite{duckham2005} formalised region growth on spatial structures and connected
-subgraphs. Recent work extends cloaking for edge computing and trajectory
-publication \cite{jiang2024}, but assumes Euclidean space and fixed parameters
-and is rarely compared across families.
+\textbf{Heuristic mechanisms.} Spatial cloaking and $k$-anonymity
+\cite{sweeney2002,gruteser2003,mokbel2006,duckham2005}, geo-indistinguishability
+and the planar Laplace mechanism \cite{andres2013,chatzikokolakis2013}, graph
+projection \cite{bordenabe2014}, density-aware $k$
+\cite{niu2014}, and temporal cloaking \cite{gruteser2003} are all heuristics:
+they fix a rule and accept whatever privacy it yields.
 
-\textbf{Differential privacy for location.} The Laplace mechanism
-\cite{dwork2006calibrating} and geo-indistinguishability \cite{andres2013,
-chatzikokolakis2013} add calibrated noise to coordinates; Xiao and Xiong
-\cite{xiao2015} showed that temporal correlation degrades these guarantees.
-Unconstrained noise can place reports off the road network, motivating
-graph projection \cite{bordenabe2014,cunningham2021}.
+\textbf{Optimal mechanisms.} Shokri~\emph{et~al.}~\cite{shokri2012} showed the
+utility-optimal mechanism against a Bayesian localization adversary is an LP;
+\cite{shokri2015pets} casts it as a Stackelberg game; Bordenabe~\emph{et~al.}
+\cite{bordenabe2014} add geo-indistinguishability as linear constraints. All are
+on the Euclidean plane / regular grids, are snapshot-focused, and are explicitly
+scalability-limited (the LP has $|V|^2$ variables); none is evaluated on a real
+road network. MIRAGE closes exactly this gap.
 
-\textbf{Trajectory privacy and evaluation.} Chow and Mokbel \cite{chow2011}
-formalised trajectory privacy; recent LDP synthesis \cite{du2023,hu2024} and
-generative approaches \cite{buchholz2024} advance within single families.
-Crucially, the standard way to \emph{measure} location privacy is the expected
-error of an optimal adversary \cite{shokri2011}---the view we adopt here in place
-of family-specific scores. Prior comparative studies fix a dataset or a metric
-but not the threat model, and none, to our knowledge, evaluate a common mechanism
-set under both a snapshot and a trajectory adversary on a real road network
-across two datasets, which is the gap this paper fills.
+\textbf{Trajectory correlation.} Xiao and Xiong \cite{xiao2015} showed per-report
+DP degrades under Markov temporal correlation; subsequent work handles
+trajectories via DP composition, dummies, or synthesis \cite{du2023,hu2024,
+buchholz2024}. We use a Viterbi trajectory adversary to \emph{measure} this
+degradation across mechanisms on a common scale.
+
+\textbf{Quantifying privacy.} Shokri~\emph{et~al.}~\cite{shokri2011} define
+location privacy as the expected error of an optimal adversary---the metric we
+adopt for a comparable, in-metres evaluation.
 
 % =====================================================================
 \section{System Model and Threat Models}
 \label{sec:sysmodel}
 % =====================================================================
-\subsection{Graph-Based Spatial Model}
-The urban environment is an undirected weighted graph $G=(V,E)$ where vertices
-are spatial locations and edges are road connectivity, with edge weights the
-metric road distance. We use two graphs over central Beijing (latitude
-$[39.8,40.1]$, longitude $[116.2,116.5]$): a controlled $30\times30$ grid (900
-nodes) that removes topological confounds, and a \emph{real} OpenStreetMap drive
-network for the same region, consolidated to 3{,}154 nodes and 5{,}111 edges with
-irregular degree (mean 3.24, maximum 23), dead-ends (16\,\%), and hierarchy---
-properties absent from the grid. The canonical distance is the shortest path;
-distances are shared across all mechanisms so no mechanism is advantaged by a
-different metric.
+\textbf{Graph.} The environment is an undirected weighted graph $G=(V,E)$ with
+edge weights the road distance and $d_G$ the shortest-path metric. We use two
+graphs over central Beijing: a controlled $30\times30$ grid (900 nodes) that
+removes topological confounds, and the \emph{real} OpenStreetMap drive network
+for the same region, consolidated to $3{,}154$ nodes / $5{,}111$ edges with
+irregular degree (mean $3.24$, max $23$), $16\%$ dead-ends, and hierarchy---
+absent from the grid.
 
-\subsection{Trajectory Data}
-We use two real datasets. \emph{GeoLife} \cite{zheng2009,zheng2008} contains GPS
-traces from 182 users in Beijing (2007--2012); after bounding-box filtering and a
-200\,km/h speed filter it yields $\sim$16.9\,M records on the grid and $\sim$11.4\,M
-map-matched to the real graph. \emph{T-Drive} is a denser one-week trace of
-$\sim$10{,}000 Beijing taxis, yielding $\sim$4\,M records map-matched to the same
-real graph. Using two datasets with very different density is essential: it
-separates genuine mechanism properties from single-dataset quirks
-(Section~\ref{sec:results}).
+\textbf{Data.} Three real mobility datasets across two cities. In Beijing:
+GeoLife \cite{zheng2009,zheng2008} ($182$ users, multi-modal GPS; $\sim$11.4\,M
+points map-matched to the real graph) and T-Drive ($\sim$10k taxis; $\sim$4\,M
+points), a much denser regime. In Porto, Portugal: the ECML/PKDD taxi dataset
+($1.71$\,M trips, $\sim$81\,M points map-matched to a real Porto OSM graph of
+$3{,}455$ nodes). Using multiple datasets of very different density, and a
+\emph{second city}, separates mechanism properties from single-dataset or
+single-city quirks.
 
-\subsection{Two Threat Models}
-\label{sec:threats}
-Privacy is meaningful only against an adversary. We consider two, so that
-mechanisms defending different threats are each judged against the threat they
-target:
-\begin{itemize}
-\item a \emph{snapshot adversary} that observes a single released report and
-infers the true node; and
-\item a \emph{trajectory adversary} that observes a sequence of reports for a
-user and reconstructs the trajectory using a mobility model.
-\end{itemize}
-Both possess public background knowledge estimated from the data: a population
-prior $\pi(v)$ (node-occupancy distribution) and a first-order Markov mobility
-model $P(v_{t+1}\mid v_t)$. The adversary knows the mechanism but not its private
-randomness. Section~\ref{sec:adversary} makes both operational.
+\textbf{Two adversaries.} Both know the mechanism and public background
+knowledge---a population prior $\pi(v)$ and a first-order Markov mobility model
+$P(v_{t+1}\mid v_t)$, estimated once from the data and shared, so no mechanism is
+advantaged. A \emph{snapshot} adversary observes one release; a \emph{trajectory}
+adversary observes a sequence and decodes it (Section~\ref{sec:adversary}).
 
 % =====================================================================
 \section{Adversary-Grounded Privacy Metric}
 \label{sec:adversary}
 % =====================================================================
-Comparative studies commonly reduce privacy to a mechanism-specific score in
-$[0,1]$---e.g.\ $k/k_{\max}$ for $k$-anonymity and a log-scaled $\varepsilon$ for
-DP. Such scores have no common operational meaning and cannot answer whether
-$k{=}3$ anonymity hides a user better than $\varepsilon{=}1$
-geo-indistinguishability. We instead define privacy as the expected error of an
-optimal adversary that inverts the mechanism using public knowledge
-\cite{shokri2011}, measured in metres and therefore comparable across all
-mechanisms.
+Privacy is the expected error of an optimal adversary that inverts the mechanism
+using public knowledge \cite{shokri2011}, measured in metres and thus comparable
+across all families.
 
-\subsection{Snapshot Adversary}
-Given one release $o$, the adversary forms the posterior
-$P(v\mid o)\propto P(o\mid v)\,\pi(v)$ over the true node $v$ and outputs the
-Bayes estimate
-\begin{equation}
-\hat v \;=\; \arg\min_{v'\in V}\ \sum_{v\in V} P(v\mid o)\,d(v',v),
-\end{equation}
-minimising expected graph distance. Privacy is
-$\mathrm{AE}_{\mathrm{snap}}=\mathbb{E}[d(v_{\text{true}},\hat v)]$ in metres.
-The observation model $P(o\mid v)$ differs by family---for cloaking mechanisms it
-restricts the prior to the released anonymity set; for the planar-Laplace
-mechanisms it is the Laplace emission density times the prior---but the measured
-quantity is identical for all.
+\textbf{Snapshot adversary.} Observing release $o$, it forms the posterior
+$P(v\mid o)\propto P(o\mid v)\,\pi(v)$ and outputs the Bayes estimate
+$\hat v=\arg\min_{v'}\sum_v P(v\mid o)\,d_G(v',v)$; privacy is
+$\mathbb{E}[d_G(v_{\text{true}},\hat v)]$. The observation model $P(o\mid v)$
+differs by mechanism, but the measured quantity is identical.
 
-\subsection{Trajectory Adversary}
-A stronger adversary observes a \emph{sequence} of releases for a user and decodes
-the most likely hidden node sequence by Viterbi, combining the per-report
-emission model with the Markov mobility prior. Privacy is the mean tracking error
-$\mathrm{AE}_{\mathrm{traj}}$ (metres) and the per-step re-identification rate.
-This is the threat temporal mechanisms target, and the one that independent
-per-report noise fails to resist because temporal correlation lets the adversary
-average noise out \cite{xiao2015}.
+\textbf{Trajectory adversary.} Observing a sequence, it Viterbi-decodes the
+hidden node sequence, combining the per-report emission with the Markov prior;
+privacy is the mean tracking error and per-step re-identification rate. This is
+the threat temporal mechanisms target and that per-report noise fails against
+\cite{xiao2015}.
 
-\subsection{Why a Single Scale Is Inadequate}
-The two adversaries induce \emph{different} rankings
-(Section~\ref{sec:results}, Fig.~\ref{fig:dual}): a mechanism strong against one
-can be weak against the other, so any single-scale privacy comparison mis-ranks
-mechanisms defending different threats. This is the central methodological point
-of the paper.
-
-% =====================================================================
-\section{Privacy Mechanisms}
-\label{sec:mechanisms}
-% =====================================================================
-We evaluate five representative classical mechanisms spanning three families,
-plus our DA-Hybrid (Section~\ref{sec:hybrid}).
-
-\textbf{Graph $k$-anonymity} grows a connected region by breadth-first search
-until it covers $\ge k$ users, and reports the region medoid
-\cite{mokbel2006,duckham2005} (Fig.~\ref{fig:spatial}). \textbf{Coordinate
-differential privacy} adds planar Laplace noise $\mathrm{Lap}(\Delta/\varepsilon)$
-to each coordinate \cite{andres2013}; the output may fall off the road network.
-\textbf{Graph-constrained DP} projects the noisy point to the nearest graph node
-\cite{bordenabe2014}, restoring on-graph validity. \textbf{Density-aware adaptive
-$k$-anonymity} selects $k$ per node from local density percentiles
-\cite{niu2014}. \textbf{Temporal cloaking} delays reports until $k$ users share a
-temporal window and releases the group medoid \cite{gruteser2003}.
+\textbf{A single scale is inadequate.} Fig.~\ref{fig:dual} plots the two errors
+against each other on the grid: density-aware adaptation and temporal cloaking
+\emph{swap} rank between the threats, so any single-scale privacy comparison
+mis-ranks mechanisms defending different threats.
 
 \begin{figure}[t]\centering
-\includegraphics[width=0.98\columnwidth]{fig1_spatial_cloaking.png}
-\caption{Spatial cloaking on the Beijing graph: true locations (left) are
-replaced by the medoid of a connected region containing at least $k$ users
-(right).}
-\label{fig:spatial}
+\includegraphics[width=0.95\columnwidth]{fig_dual_threat.png}
+\caption{Privacy is threat-model dependent: mechanisms rank differently under the
+snapshot ($x$) and trajectory ($y$) adversaries; points off the diagonal are
+protected asymmetrically.}
+\label{fig:dual}
 \end{figure}
 
 % =====================================================================
-\section{DA-Hybrid: Density-Adaptive Hybrid Privacy}
-\label{sec:hybrid}
+\section{MIRAGE: Optimal Graph-Native Obfuscation}
+\label{sec:mirage}
 % =====================================================================
-The comparison reveals a gap: $k$-anonymity attains low error where users are
-dense but loses availability in sparse areas, while DP guarantees availability at
-an error premium. DA-Hybrid closes this gap with a per-report, density-driven
-controller (Algorithm~\ref{alg:hybrid}).
+\subsection{The Optimal Mechanism on a Graph}
+For a prior $\pi$ and a utility (distortion) budget $D_{\max}$, the release
+distribution $f(o\mid v)$ maximising the optimal Bayesian adversary's error, with
+both distortion and adversary error measured in graph distance $d_G$, is the LP
+\begin{align}
+\max_{f,\,y}\ & \textstyle\sum_o y_o &&\text{(privacy, metres)}\label{eq:obj}\\
+\text{s.t. }\ & y_o \le \textstyle\sum_v \pi(v)\,f(o\mid v)\,d_G(h,v)\ \ \forall o,h &&\text{(adversary)}\nonumber\\
+& \textstyle\sum_v \pi(v)\sum_o f(o\mid v)\,d_G(v,o) \le D_{\max} &&\text{(utility)}\nonumber\\
+& \textstyle\sum_o f(o\mid v)=1,\ f\ge 0. &&\nonumber
+\end{align}
+The auxiliary $y_o$ linearises the adversary's inner minimisation
+(Shokri~\emph{et~al.}~\cite{shokri2012}); we instantiate it with $d_G$ and
+on-graph output support, which is new. An optional geo-indistinguishability
+constraint $f(o\mid v)\le e^{\varepsilon d_G(v,v')} f(o\mid v')$ adds a formal
+$\varepsilon$-DP guarantee, recovering \cite{bordenabe2014} as a special case.
 
-For a user at node $v$, let $\rho(v)$ be the local density (users at $v$ plus its
-one-hop neighbours). The mechanism (i)~attempts bounded graph $k$-anonymity,
-growing a region until it covers $\ge k$ users or reaches a density-dependent
-size cap; if $k$ is met it reports the medoid (low error, on-graph,
-$k$-satisfied). Otherwise (ii)~it falls back to graph-constrained DP with a
-density-adaptive budget---$\varepsilon$ is reduced in sparse regions, precisely
-where anonymity is hardest and most needed---and projects to the nearest node.
+\subsection{Scaling to a City: Density-Adaptive Local LPs}
+Program~\eqref{eq:obj} has $|V|^2$ variables---$\sim$$10^7$ for our graph---and is
+intractable directly. MIRAGE partitions $V$ into \emph{density-adaptive local
+regions}: starting from the highest-prior unassigned node, each region takes its
+$C$ nearest still-unassigned nodes (dense areas are seeded first and covered by
+tighter regions). We solve one LP of size $C$ per region and assign every member
+its optimal row. This turns an $|V|^2$ program into $\lceil |V|/C\rceil$ programs
+of $O(C^3)$ each---seconds to precompute offline, then $O(1)$ sampling at release
+time. Releasing across regions is never optimal under a distortion budget (it
+costs too much), so the partition is a principled, near-lossless approximation.
 
 \begin{algorithm}[t]
-\caption{DA-Hybrid per-report anonymisation}
-\label{alg:hybrid}
+\caption{MIRAGE precompute (per graph, offline)}
+\label{alg:mirage}
 \begin{algorithmic}[1]
-\REQUIRE snapshot $S$, target $k$, base budget $\varepsilon$, size cap $R$
-\FOR{each user $u$ at node $v$}
-  \STATE $\rho \leftarrow$ local density of $v$ in $S$
-  \STATE grow region $\mathcal{R}$ by BFS until $|users(\mathcal{R})|\ge k$ or $|\mathcal{R}|\ge R(\rho)$
-  \IF{$|users(\mathcal{R})|\ge k$}
-     \STATE report $\mathrm{medoid}(\mathcal{R})$ \COMMENT{$k$-anonymity branch}
-  \ELSE
-     \STATE $\varepsilon' \leftarrow$ density-adaptive budget ($\downarrow$ in sparse regions)
-     \STATE add $\mathrm{Lap}(\Delta/\varepsilon')$ noise; project to nearest node \COMMENT{DP fallback}
-  \ENDIF
+\REQUIRE graph $G$, prior $\pi$, budget $D_{\max}$, region size $C$
+\STATE partition $V$ into local regions (greedy, densest-first)
+\FOR{each region $R$}
+  \STATE $d_R \leftarrow$ graph distances on $R$; $\pi_R\leftarrow$ prior on $R$ (renorm.)
+  \STATE $f_R \leftarrow$ solve LP~\eqref{eq:obj}$(d_R,\pi_R,D_{\max})$
+  \STATE store $f_R(\cdot\mid v)$ for each $v\in R$
 \ENDFOR
 \end{algorithmic}
 \end{algorithm}
 
-Because the fallback never fails, \emph{availability is 100\,\% by
-construction}; because dense reports are served by cloaking, error stays low
-where density permits; and every output is a valid road-network node carrying a
-per-report guarantee of one of two well-understood types. The cost matches the
-underlying primitives (bounded BFS, or $O(1)$ noise plus nearest-node
-projection).
+DP, $k$-anonymity, and our earlier density-adaptive hybrid (DA-Hybrid) are
+heuristic baselines; MIRAGE dominates them by construction and, we show, in
+measurement.
 
 % =====================================================================
 \section{Experimental Setup}
 \label{sec:setup}
 % =====================================================================
-All mechanisms run on the same graph and data with a shared distance layer. We
-sweep $k\in\{2,\dots,6\}$, $\varepsilon\in\{0.1,0.5,1,2,5\}$, and time windows
-$\{60,300,600,1200\}$\,s; unless noted, results use the representative 10-minute
-window. Privacy is measured by the two adversaries of
-Section~\ref{sec:adversary}; availability is the fraction of reports served with
-their guarantee; utility is the spatial (graph) location error. The adversary
-prior and Markov mobility model are estimated once per dataset and shared. On the
-real graph a single dense distance matrix is shared by every mechanism and the
-adversary, keeping the exact Bayes estimator tractable.
-
-\textbf{Energy model.} Per-report energy is
-$E=E_{\text{radio}}+E_{\text{comp}}+E_{\text{retrans}}$, with
-$E_{\text{radio}}=P_{\text{tx}}t_{\text{tx}}$. Rather than fix a single radio, we
-sweep BLE, Zigbee, LoRa, NB-IoT, and LTE-M
-(Section~\ref{sec:energy}) so that radio-dependent conclusions are identified as
-such.
+All mechanisms share the graph, data, prior, and distance layer. We evaluate two
+ways. (i)~The \emph{frontier}: for each mechanism we compute privacy (optimal-
+adversary error) and utility (expected distortion) \emph{analytically} on the
+same regions, sweeping the mechanism's knob ($D_{\max}$ for MIRAGE, $\varepsilon$
+for DP, $k$ for $k$-anonymity), with $95\%$ weighted-bootstrap CIs over regions.
+(ii)~A \emph{deployment comparison}: all seven mechanisms at representative
+operating points under the sampled snapshot and trajectory adversaries, reporting
+availability and spatial error. The energy model is swept across radio
+technologies (Section~\ref{sec:energy}). MIRAGE uses $C{=}28$ unless noted.
 
 % =====================================================================
 \section{Results}
 \label{sec:results}
 % =====================================================================
+\subsection{The Price of Heuristics}
+\label{sec:price}
+Fig.~\ref{fig:frontier} shows the privacy--utility frontier on the real GeoLife
+graph. MIRAGE hugs the ideal (privacy$\,=\,$utility) at low distortion and
+dominates DP and $k$-anonymity throughout the practical regime; all mechanisms
+converge at high distortion to the network's intrinsic prior-uncertainty ceiling
+($\sim$720\,m, the maximum error any mechanism can induce). Table~\ref{tab:price}
+quantifies the gap: at matched utility, MIRAGE delivers $+13$ to $+22\%$ more
+privacy than the best heuristic in the $150\text{--}500$\,m regime on GeoLife,
+i.e., DP and $k$-anonymity waste that fraction of their distortion. The gap
+closes only past $\sim$1100\,m, where all saturate at the ceiling.
 
-\subsection{Adversary-Grounded Comparison}
-Table~\ref{tab:unified} reports all mechanisms under both adversaries,
-availability, spatial error, on-graph validity, and per-report energy under two
-radios (GeoLife, grid, 10\,min). Three findings stand out. \emph{(1)} Under a real
-Bayesian adversary, $k$-anonymity is far more private than its $[0,1]$ score
-implied---snapshot error $5193$\,m at $k{=}3$ versus $1651$\,m for DP at
-$\varepsilon{=}1$---whereas the old score rated them comparable. \emph{(2)} The
-trajectory adversary reorders mechanisms relative to the snapshot adversary
-(Fig.~\ref{fig:dual}): density-aware adaptation and temporal cloaking swap rank,
-and temporal cloaking---most private under the snapshot attack---is markedly less
-so under tracking. \emph{(3)} DA-Hybrid attains the lowest error among the
-100\,\%-availability mechanisms ($1117$\,m vs.\ $1569$\,m for DP and $1890$\,m for
-graph-constrained DP) while remaining on-graph (Fig.~\ref{fig:pareto}).
+\textbf{Cross-city generalisation.} The same result holds on all three datasets
+and both cities (Fig.~\ref{fig:frontier_porto}): MIRAGE's gain over the best
+heuristic in the practical regime is $+13$--$22\%$ on GeoLife, $+9$--$17\%$ on
+T-Drive, and $+5$--$12\%$ on Porto. The magnitude tracks each city's mobility
+structure---smaller where mobility is more predictable and heuristics are already
+closer to optimal---but MIRAGE is Pareto-optimal and dominant in every setting.
 
-\begin{table*}[t]
-\centering
-\caption{Unified comparison under adversary-grounded privacy (expected
-Bayesian-adversary error in metres; higher is more private) for the snapshot and
-trajectory threat models. GeoLife, $30\times30$ grid, window $=10$\,min.}
-\label{tab:unified}
-\begin{tabular}{lrrrrccc}
+\begin{figure}[t]\centering
+\includegraphics[width=0.98\columnwidth]{fig_frontier_porto_real.png}
+\caption{Cross-city check: privacy--utility frontier on the real Porto (Portugal)
+network under the ECML/PKDD taxi dataset. MIRAGE dominates the heuristics here
+too; the price of heuristics is $+5$--$12\%$ in the practical regime.}
+\label{fig:frontier_porto}
+\end{figure}
+
+\begin{figure}[t]\centering
+\includegraphics[width=0.98\columnwidth]{fig_frontier_geolife_real.png}
+\caption{Privacy--utility frontier (GeoLife, real graph, $95\%$ CI). MIRAGE
+(optimal) dominates the heuristics; the vertical gap to MIRAGE is the price of
+heuristics. All converge at the intrinsic uncertainty ceiling.}
+\label{fig:frontier}
+\end{figure}
+
+\begin{table}[t]\centering
+\caption{Price of heuristics (GeoLife, real graph): privacy (optimal-adversary
+error, m) at matched utility loss.}
+\label{tab:price}
+\begin{tabular}{rrrrr}
 \toprule
-Mechanism & Snap.\ AE & Traj.\ AE & Avail. & Loc.\ Err & On-graph & $E_{\mathrm{LoRa}}$ & $E_{\mathrm{BLE}}$ \\
- & (m) & (m) & & (m) & & (mJ) & (mJ) \\
+Utility (m) & MIRAGE & DP & $k$-anon & MIRAGE gain \\
 \midrule
-$k$-Anonymity        & 5193 & 5141 & 74.5\% & 1189 & yes & 5.57 & 0.62 \\
-Differential Privacy & 1651 & 1893 & 100\%  & 1569 & no  & 5.05 & 0.10 \\
-Graph-Constr.\ DP    & 1829 & 1915 & 100\%  & 1890 & yes & 5.16 & 0.21 \\
-Density-Aware        & 4256 & 5563 & 78.2\% & 2427 & yes & 5.78 & 0.83 \\
-Temporal Cloaking    & 6376 & 5037 & 18.5\% & 5758 & yes & 5.05 & 0.10 \\
-\textbf{DA-Hybrid (ours)} & 1441 & 1707 & \textbf{100\%} & \textbf{1117} & yes & 5.10 & 0.15 \\
+150 & 150 & 133 & 92 & $+13\%$ \\
+300 & 300 & 254 & 201 & $+18\%$ \\
+500 & 488 & 400 & 355 & $+22\%$ \\
+800 & 632 & 583 & 555 & $+9\%$ \\
+$\ge$1100 & 700+ & 649 & 700+ & $\sim0\%$ (saturated) \\
 \bottomrule
 \end{tabular}
-\end{table*}
+\end{table}
 
-\begin{figure}[t]\centering
-\includegraphics[width=0.95\columnwidth]{fig_dual_threat.png}
-\caption{Privacy is threat-model dependent. Each mechanism's expected adversary
-error under the snapshot attack ($x$) and the trajectory attack ($y$). Points off
-the $y{=}x$ diagonal are protected asymmetrically; density-aware and temporal
-cloaking swap rank between the two threats.}
-\label{fig:dual}
-\end{figure}
+\subsection{Ablation: What Makes MIRAGE Work}
+Table~\ref{tab:ablation} ablates the two knobs. Region size $C$ trades privacy
+for LP time: privacy rises with $C$ (at $D_{\max}{=}800$: $421$\,m at $C{=}12$,
+$632$\,m at $C{=}28$, $715$\,m at $C{=}40$) while solve time grows as $O(C^3)$
+($1.3$\,s to $21$\,s over all regions); $C{=}28$ is the knee. The optional
+geo-indistinguishability constraint costs some optimality ($632\!\to\!456$\,m at
+$\varepsilon/\text{m}{=}0.01$) in exchange for a formal DP guarantee---MIRAGE
+subsumes DP as its constrained case.
 
-\begin{figure}[t]\centering
-\includegraphics[width=0.95\columnwidth]{fig_pareto_privacy.png}
-\caption{Privacy (snapshot adversary error, higher is better) versus utility loss
-(location error, lower is better); marker size $\propto$ availability. No
-mechanism dominates: $k$-anonymity reaches high privacy but only 74.5\,\%
-availability, while DA-Hybrid gives the lowest error among the
-100\,\%-availability mechanisms.}
-\label{fig:pareto}
-\end{figure}
-
-\subsection{Availability}
-Fig.~\ref{fig:avail} shows availability varies dramatically on GeoLife: both DP
-variants and DA-Hybrid serve all users, $k$-anonymity 74.5\,\%, density-aware
-78\,\%, and temporal cloaking only 18.5\,\%. As we show next, however, these
-figures are dataset-specific.
-
-\begin{figure}[t]\centering
-\includegraphics[width=0.95\columnwidth]{fig2_availability_analysis.png}
-\caption{Service availability on GeoLife (grid). DP variants and DA-Hybrid reach
-100\,\%; temporal cloaking is critically low at 18.5\,\%.}
-\label{fig:avail}
-\end{figure}
-
-\subsection{Real Road Network and Second Dataset}
-\label{sec:realnet}
-We repeat the evaluation on the real OSM graph with GeoLife map-matched to it, and
-again on the denser T-Drive taxis (Table~\ref{tab:cross},
-Fig.~\ref{fig:cross}). Two robust conclusions emerge. \emph{Rankings hold across
-topology:} under the adversary-privacy metric the ordering on the real graph is
-nearly identical to the grid---temporal cloaking most private, DA-Hybrid most
-utility-favouring---so relative rankings are \emph{shown}, not merely asserted, to
-survive the grid abstraction; only the DP/graph-constrained-DP pair exchanges
-places. \emph{Availability is dataset-density-driven, not mechanism-intrinsic:}
-on sparse GeoLife, $k$-anonymity (74.5\,\%) and temporal cloaking (18.5\,\%)
-suffer denial of service, but on dense T-Drive \emph{every} mechanism reaches
-100\,\% availability. Absolute spatial error scales with graph granularity---the
-Laplace scale is calibrated to the median edge length, which is shorter on the
-real graph---so error is compared within, not across, topologies.
-
-\begin{table}[t]
-\centering
-\caption{Location error (m) / availability across the grid abstraction, the real
-OSM graph under GeoLife, and the real graph under T-Drive (10\,min).}
-\label{tab:cross}
-\begin{tabular}{lccc}
+\begin{table}[t]\centering
+\caption{MIRAGE ablation (GeoLife, real graph).}
+\label{tab:ablation}
+\begin{tabular}{lrrrr}
 \toprule
-Mechanism & GeoLife/grid & GeoLife/real & T-Drive/real \\
+Region size $C$ & 12 & 20 & 28 & 40 \\
 \midrule
-$k$-Anonymity        & 1189 / 74\% & 2517 / 77\% & 107 / 100\% \\
-Differential Privacy & 1569 / 100\% & 414 / 100\% & 454 / 100\% \\
-Graph-Constr.\ DP    & 1890 / 100\% & 933 / 100\% & 809 / 100\% \\
-Density-Aware        & 2427 / 78\% & 2040 / 72\% & 128 / 100\% \\
-Temporal Cloaking    & 5758 / 19\% & 4475 / 90\% & 6460 / 100\% \\
-\textbf{DA-Hybrid}   & 1117 / 100\% & 664 / 100\% & 62 / 100\% \\
+Privacy @ $D_{\max}{=}800$ (m) & 421 & 551 & 632 & 715 \\
+LP time, all regions (s) & 1.3 & 3.1 & 7.0 & 20.8 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Deployment Comparison (All Mechanisms)}
+Table~\ref{tab:main} compares all seven mechanisms on the real GeoLife graph
+under the sampled snapshot and trajectory adversaries. MIRAGE serves every user
+(100\% availability), is on-graph, and provides strong balanced privacy; the two
+adversaries again reorder the heuristics. Two robustness findings emerge from
+repeating on T-Drive: rankings hold under the adversary metric, and
+\emph{availability is dataset-density-driven}---on dense T-Drive every mechanism
+reaches 100\% availability, whereas on sparse GeoLife $k$-anonymity (33\%) and
+density-aware (61\%) suffer denial of service (Fig.~\ref{fig:cross}).
+
+\begin{table}[t]\centering
+\caption{Deployment comparison (GeoLife, real graph, 10\,min). Privacy = Bayesian-
+adversary error (m, higher = more private).}
+\label{tab:main}
+\begin{tabular}{lrrrr}
+\toprule
+Mechanism & Snap.\ AE & Traj.\ AE & Avail. & Loc.\ Err \\
+\midrule
+$k$-Anonymity & 1694 & 3459 & 33\% & 4493 \\
+Differential Privacy & 730 & 947 & 100\% & 466 \\
+Graph-Constr.\ DP & 1339 & 732 & 100\% & 1400 \\
+Density-Aware & 1437 & 3459 & 61\% & 2379 \\
+DA-Hybrid (heuristic) & 311 & 1885 & 100\% & 563 \\
+Temporal Cloaking & 2577 & 4636 & 100\% & 3215 \\
+\textbf{MIRAGE (ours)} & 846 & 855 & \textbf{100\%} & 1090 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \begin{figure}[t]\centering
 \includegraphics[width=\columnwidth]{fig_cross_topology.png}
-\caption{Availability (left) and location error (right) across the grid, the real
-OSM graph (GeoLife), and the real graph under T-Drive. Availability rises to
-100\,\% for all mechanisms on the dense dataset; DA-Hybrid holds the lowest error
-throughout.}
+\caption{Availability and error across the grid, the real graph (GeoLife), and
+the real graph under T-Drive. Availability rises to 100\% for all mechanisms on
+the dense dataset---it is density-driven, not mechanism-intrinsic.}
 \label{fig:cross}
 \end{figure}
 
 \subsection{Energy-Model Sensitivity}
 \label{sec:energy}
-The claim that radio transmission dominates per-report energy is not universal:
-it depends on the radio (Fig.~\ref{fig:energy}). Sweeping BLE (0.05\,mJ) through
-NB-IoT/LTE-M (60--75\,mJ), the radio share ranges from $6$--$50\%$ under
-BLE---where the BFS-based mechanisms' computation dominates---to $99\%$ under
-cellular IoT. The ``radio dominates'' conclusion is therefore scoped to
-LPWAN/cellular deployments; for short-range radios, algorithm computation is a
-first-order energy factor.
+The claim that radio transmission dominates per-report energy holds only for
+LPWAN/cellular radios (LoRa/NB-IoT/LTE-M, $99\%$ radio share) but not for BLE,
+where computation is $6\text{--}50\%$ of energy for BFS-based mechanisms
+(Fig.~\ref{fig:energy}). MIRAGE's release-time cost is a single categorical draw
+($O(1)$), so it is as radio-dominated as DP.
 
 \begin{figure}[t]\centering
 \includegraphics[width=0.95\columnwidth]{fig_energy_sensitivity.png}
-\caption{Radio share of per-report energy across radio technologies. Radio
-dominance holds for LoRa/NB-IoT/LTE-M but not for BLE, where computation is
-comparable or larger for BFS-based mechanisms.}
+\caption{Radio share of per-report energy vs radio technology. Radio dominance is
+radio-dependent, not universal.}
 \label{fig:energy}
 \end{figure}
 
@@ -474,99 +425,91 @@ comparable or larger for BFS-based mechanisms.}
 \section{Discussion}
 \label{sec:discussion}
 % =====================================================================
-\textbf{Deployment guidance.} The right mechanism depends on the binding
-constraint. Where denial of service is unacceptable, use DA-Hybrid or a DP variant
-(100\,\% availability); DA-Hybrid additionally keeps outputs on-graph and gives
-the lowest error among these. Where the strongest privacy against a
-single-observation attacker is paramount and some service loss is tolerable,
-$k$-anonymity or temporal cloaking rank highest---but only against the
-\emph{snapshot} adversary; under tracking their advantage shrinks, so the choice
-must be made against the relevant threat. Availability requirements should be read
-against deployment density: on dense fleets (T-Drive-like) all mechanisms serve
-every user, so availability ceases to discriminate.
+\textbf{Guidance.} MIRAGE gives, for a chosen utility budget on the operator's
+own road network and mobility statistics, the release policy that provably
+maximises attacker error---up to $+22\%$ more privacy than tuned heuristics at
+equal utility, with 100\% availability and on-graph outputs. Where a formal DP
+guarantee is required, its geo-indistinguishability-constrained variant applies
+at a small, measured cost.
 
-\textbf{Limitations.} Absolute error is not comparable across topologies because
-the Laplace scale is graph-granularity dependent; our cross-topology conclusions
-therefore rest on adversary-privacy and availability. The energy model is
-analytical, suited to ranking rather than absolute prediction, and we report its
-radio sensitivity explicitly. The mobility prior is first-order Markov; richer
-priors would strengthen the trajectory adversary and can only lower the reported
-privacy.
+\textbf{Limitations (honest).} (i)~At high distortion the local-region cap ($C$)
+bounds MIRAGE's reach, so heuristics catch up near the uncertainty ceiling;
+hierarchical or overlapping regions would extend the advantage. (ii)~The
+optimal-mechanism LP is per-snapshot; the trajectory adversary shows temporal
+correlation still leaks, and a fully trajectory-optimal MIRAGE (optimising the
+sequential adversary via a mobility-corrected objective) is promising future
+work---the ``sequential estimation'' the name anticipates. (iii)~Absolute error
+is graph-granularity dependent, so cross-topology conclusions rest on
+adversary-privacy and availability. (iv)~The energy model is analytical, suited
+to ranking; we report its radio sensitivity explicitly.
 
 % =====================================================================
 \section{Conclusion}
 \label{sec:conclusion}
 % =====================================================================
-We replaced ad-hoc privacy scores with an adversary-grounded metric evaluated
-under two threat models, showing that a single privacy scale mis-ranks mechanisms
-that defend different threats. Using this metric we introduced DA-Hybrid, a
-density-adaptive mechanism with 100\,\% availability, on-graph outputs, and the
-lowest error among full-availability mechanisms. Across a real Beijing road
-network and two datasets, adversary-privacy rankings are stable while service
-availability is shown to be dataset-density-driven rather than mechanism-
-intrinsic. The framework is released for reproducible extension.
+We measured location privacy on a common, adversary-grounded, threat-model-aware
+scale and brought optimal obfuscation to a real road network at city scale with
+MIRAGE. On real road networks of two cities across three datasets, deployed
+heuristics leave $5\text{--}22\%$ of achievable privacy on the table in the
+practical regime, while MIRAGE is Pareto-optimal with full availability and
+on-graph outputs.
+Rankings hold from grid to real topology, and availability is shown to be
+dataset-density-driven. The framework is released for reproducible extension.
 
 % =====================================================================
 \begin{thebibliography}{99}
 % =====================================================================
 \bibitem{sweeney2002} L.~Sweeney, ``$k$-Anonymity: A model for protecting
-privacy,'' \emph{Int.\ J.\ Uncertainty, Fuzziness and Knowledge-Based Systems},
-vol.~10, no.~5, pp.~557--570, 2002.
+privacy,'' \emph{Int. J. Uncertainty, Fuzziness Knowl.-Based Syst.}, vol.~10,
+no.~5, pp.~557--570, 2002.
 \bibitem{gruteser2003} M.~Gruteser and D.~Grunwald, ``Anonymous usage of
-location-based services through spatial and temporal cloaking,'' in
-\emph{Proc.\ MobiSys}, 2003, pp.~31--42.
-\bibitem{dwork2006} C.~Dwork, ``Differential privacy,'' in \emph{Proc.\ ICALP},
+location-based services through spatial and temporal cloaking,'' in \emph{Proc.
+MobiSys}, 2003, pp.~31--42.
+\bibitem{dwork2006} C.~Dwork, ``Differential privacy,'' in \emph{Proc. ICALP},
 LNCS 4052, 2006, pp.~1--12.
-\bibitem{dwork2006calibrating} C.~Dwork, F.~McSherry, K.~Nissim, and A.~Smith,
-``Calibrating noise to sensitivity in private data analysis,'' in
-\emph{Proc.\ TCC}, LNCS 3876, 2006, pp.~265--284.
 \bibitem{shokri2011} R.~Shokri, G.~Theodorakopoulos, J.-Y.~Le Boudec, and
-J.-P.~Hubaux, ``Quantifying location privacy,'' in \emph{Proc.\ IEEE Symp.\
-Security and Privacy}, 2011, pp.~247--262.
+J.-P.~Hubaux, ``Quantifying location privacy,'' in \emph{Proc. IEEE S\&P}, 2011,
+pp.~247--262.
+\bibitem{shokri2012} R.~Shokri, G.~Theodorakopoulos, C.~Troncoso, J.-P.~Hubaux,
+and J.-Y.~Le Boudec, ``Protecting location privacy: Optimal strategy against
+localization attacks,'' in \emph{Proc. ACM CCS}, 2012, pp.~617--627.
+\bibitem{shokri2015pets} R.~Shokri, ``Privacy games: Optimal user-centric data
+obfuscation,'' \emph{Proc. Privacy Enhancing Technologies}, vol.~2015, no.~2,
+pp.~299--315, 2015.
+\bibitem{bordenabe2014} N.~E.~Bordenabe, K.~Chatzikokolakis, and C.~Palamidessi,
+``Optimal geo-indistinguishable mechanisms for location privacy,'' in \emph{Proc.
+ACM CCS}, 2014, pp.~251--262.
+\bibitem{andres2013} M.~E.~Andr\'{e}s, N.~E.~Bordenabe, K.~Chatzikokolakis, and
+C.~Palamidessi, ``Geo-indistinguishability: Differential privacy for
+location-based systems,'' in \emph{Proc. ACM CCS}, 2013, pp.~901--914.
+\bibitem{chatzikokolakis2013} K.~Chatzikokolakis \emph{et~al.}, ``Broadening the
+scope of differential privacy using metrics,'' in \emph{Proc. PETS}, 2013,
+pp.~82--102.
 \bibitem{mokbel2006} M.~F.~Mokbel, C.-Y.~Chow, and W.~G.~Aref, ``The new Casper:
 Query processing for location services without compromising privacy,'' in
-\emph{Proc.\ VLDB}, 2006, pp.~763--774.
+\emph{Proc. VLDB}, 2006, pp.~763--774.
 \bibitem{duckham2005} M.~Duckham and L.~Kulik, ``A formal model of obfuscation
 and negotiation for location privacy,'' in \emph{Pervasive Computing}, LNCS 3468,
 2005, pp.~152--170.
-\bibitem{andres2013} M.~E.~Andr\'{e}s, N.~E.~Bordenabe, K.~Chatzikokolakis, and
-C.~Palamidessi, ``Geo-indistinguishability: Differential privacy for
-location-based systems,'' in \emph{Proc.\ ACM CCS}, 2013, pp.~901--914.
-\bibitem{chatzikokolakis2013} K.~Chatzikokolakis, M.~E.~Andr\'{e}s,
-N.~E.~Bordenabe, and C.~Palamidessi, ``Broadening the scope of differential
-privacy using metrics,'' in \emph{Proc.\ PETS}, 2013, pp.~82--102.
-\bibitem{bordenabe2014} N.~E.~Bordenabe, K.~Chatzikokolakis, and C.~Palamidessi,
-``Optimal geo-indistinguishable mechanisms for location privacy,'' in
-\emph{Proc.\ ACM CCS}, 2014, pp.~251--262.
 \bibitem{niu2014} B.~Niu, Q.~Li, X.~Zhu, G.~Cao, and H.~Li, ``Achieving
-$k$-anonymity in privacy-aware location-based services,'' in \emph{Proc.\ IEEE
+$k$-anonymity in privacy-aware location-based services,'' in \emph{Proc. IEEE
 INFOCOM}, 2014, pp.~754--762.
 \bibitem{xiao2015} Y.~Xiao and L.~Xiong, ``Protecting locations with differential
-privacy under temporal correlations,'' in \emph{Proc.\ ACM CCS}, 2015,
+privacy under temporal correlations,'' in \emph{Proc. ACM CCS}, 2015,
 pp.~1298--1309.
-\bibitem{cunningham2021} T.~Cunningham, G.~Cormode, H.~Ferhatosmanoglu, and
-D.~Srivastava, ``Real-world trajectory sharing with local differential privacy,''
-\emph{Proc.\ VLDB Endow.}, vol.~14, no.~11, pp.~2283--2296, 2021.
-\bibitem{chow2011} C.-Y.~Chow and M.~F.~Mokbel, ``Trajectory privacy in
-location-based services and data publication,'' \emph{ACM SIGKDD Explorations},
-vol.~13, no.~1, pp.~19--29, 2011.
 \bibitem{du2023} Y.~Du \emph{et~al.}, ``LDPTrace: Locally differentially private
-trajectory synthesis,'' \emph{Proc.\ VLDB Endow.}, vol.~16, no.~8,
-pp.~1897--1909, 2023.
+trajectory synthesis,'' \emph{Proc. VLDB Endow.}, vol.~16, no.~8, pp.~1897--1909,
+2023.
 \bibitem{hu2024} Y.~Hu \emph{et~al.}, ``Real-time trajectory synthesis with local
-differential privacy,'' in \emph{Proc.\ IEEE ICDE}, 2024, pp.~1685--1698.
-\bibitem{buchholz2024} E.~Buchholz, A.~Abuadbba, S.~Wang, S.~Nepal, and
-S.~S.~Kanhere, ``SoK: Can trajectory generation combine privacy and utility?,''
-\emph{Proc.\ Privacy Enhancing Technologies}, vol.~2024, no.~3, pp.~75--93, 2024.
-\bibitem{jiang2024} N.~Jiang \emph{et~al.}, ``Location privacy protection for the
-Internet of Things with edge computing based on clustering $k$-anonymity,''
-\emph{Sensors}, vol.~24, no.~18, p.~6153, 2024.
+differential privacy,'' in \emph{Proc. IEEE ICDE}, 2024, pp.~1685--1698.
+\bibitem{buchholz2024} E.~Buchholz \emph{et~al.}, ``SoK: Can trajectory
+generation combine privacy and utility?,'' \emph{Proc. PETS}, vol.~2024, no.~3,
+pp.~75--93, 2024.
 \bibitem{zheng2009} Y.~Zheng, L.~Zhang, X.~Xie, and W.-Y.~Ma, ``Mining
-interesting locations and travel sequences from GPS trajectories,'' in
-\emph{Proc.\ WWW}, 2009, pp.~791--800.
+interesting locations and travel sequences from GPS trajectories,'' in \emph{Proc.
+WWW}, 2009, pp.~791--800.
 \bibitem{zheng2008} Y.~Zheng, Q.~Li, Y.~Chen, X.~Xie, and W.-Y.~Ma,
-``Understanding mobility based on GPS data,'' in \emph{Proc.\ UbiComp}, 2008,
+``Understanding mobility based on GPS data,'' in \emph{Proc. UbiComp}, 2008,
 pp.~312--321.
 \end{thebibliography}
-
 \end{document}

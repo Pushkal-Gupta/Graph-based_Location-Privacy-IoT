@@ -4,9 +4,10 @@ Representative configs, window = 10 min, T-Drive map-matched to the real road ne
 
 | Mechanism | Snapshot AE (m) | Trajectory AE (m) | Availability | Loc. Error (m) |
 |---|---|---|---|---|
-| k-Anonymity | 236 | 580 | 100.0% | 107 |
-| Differential Privacy | 660 | 408 | 100.0% | 454 |
-| Graph-Constrained DP | 691 | 431 | 100.0% | 809 |
-| Density-Aware k-Anon | 274 | 556 | 100.0% | 128 |
-| DA-Hybrid (ours) | 135 | 1154 | 100.0% | 62 |
+| k-Anonymity | 236 | 580 | 100.0% | 105 |
+| Differential Privacy | 666 | 412 | 100.0% | 453 |
+| Graph-Constrained DP | 685 | 422 | 100.0% | 813 |
+| Density-Aware k-Anon | 274 | 556 | 100.0% | 127 |
+| DA-Hybrid (ours) | 135 | 1154 | 100.0% | 61 |
+| MIRAGE (ours) | 645 | 481 | 100.0% | 798 |
 | Temporal Cloaking | 6178 | 8388 | 100.0% | 6460 |

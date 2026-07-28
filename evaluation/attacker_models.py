@@ -207,6 +207,24 @@ class SnapshotAdversary:
         """
         return self.attack_dp(self.coords[obs_idx], scale, true_idx)
 
+    # ---- Observation model: arbitrary emission (MIRAGE / optimal mechanism) --
+    def attack_distribution(self, source_idxs, emit_probs, true_idx):
+        """
+        General observation model: the adversary observed something that node v
+        could have produced with probability emit_probs[v] = f(o|v), for v in
+        source_idxs. Posterior P(v|o) ∝ prior(v) f(o|v); Bayes estimate over ALL
+        nodes minimises expected graph distance. Used for MIRAGE, whose emission
+        f is known exactly.
+        """
+        idxs = np.asarray(source_idxs, dtype=int)
+        w = self.prior[idxs] * np.asarray(emit_probs, dtype=float)
+        if w.sum() <= 0:
+            w = np.ones(len(idxs))
+        w = w / w.sum()
+        exp_dist = (self.D[:, idxs] * w).sum(axis=1)   # (N,)
+        est = int(np.argmin(exp_dist))
+        return float(self.D[est, true_idx]), (est == true_idx)
+
     # ---- Observation model: anonymity set (k-anon / density / group) --
     def attack_anonymity_set(self, anonset_idxs, true_idx):
         """

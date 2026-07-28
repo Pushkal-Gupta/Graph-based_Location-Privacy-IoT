@@ -12,8 +12,12 @@ REVISION_NOTES.md
 data/original_data/geolife.zip
 data/original_data/geolife_raw/
 data/original_data/tdrive*/
+data/original_data/porto/
 data/processed_data/_beijing_drive_raw.graphml
 data/processed_data/device_locations*.csv
 data/processed_data/*_utm.npy
 cache/
 evaluation/cache/
+
+# Working research notes (temporary)
+notes/

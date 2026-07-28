@@ -8,17 +8,17 @@
   },
   "differential_privacy": {
     "name": "Differential Privacy",
-    "error": 414.4176220363828,
+    "error": 452.6409866543078,
     "avail": 1.0,
-    "snap_AE": 824.33038022983,
-    "traj_AE": 1135.3055358562876
+    "snap_AE": 767.3289941751732,
+    "traj_AE": 1084.3961927934126
   },
   "graph_constrained_dp": {
     "name": "Graph-Constrained DP",
-    "error": 932.8988031351341,
+    "error": 916.2155953173367,
     "avail": 1.0,
-    "snap_AE": 780.1070462592743,
-    "traj_AE": 1105.3677059030788
+    "snap_AE": 711.6645925269937,
+    "traj_AE": 1248.2418786609874
   },
   "density_aware_k_anonymity": {
     "name": "Density-Aware k-Anon",
@@ -29,14 +29,21 @@
   },
   "adaptive_hybrid": {
     "name": "DA-Hybrid (ours)",
-    "error": 663.9327025503483,
+    "error": 603.4672332379803,
     "avail": 1.0,
-    "snap_AE": 595.1783654554835,
-    "traj_AE": 1133.029983531345
+    "snap_AE": 544.5438352380909,
+    "traj_AE": 923.6844207666775
+  },
+  "mirage": {
+    "name": "MIRAGE (ours)",
+    "error": 921.4647798358269,
+    "avail": 1.0,
+    "snap_AE": 715.2558476669983,
+    "traj_AE": 855.3531974840928
   },
   "temporal_cloaking": {
     "name": "Temporal Cloaking",
-    "error": 4475.174155875252,
+    "error": 4475.448095057565,
     "avail": 0.898876404494382,
     "snap_AE": 3962.9664186816035,
     "traj_AE": 3694.400476841737

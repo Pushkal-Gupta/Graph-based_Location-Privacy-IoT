@@ -180,6 +180,52 @@ def run(quick=False, csv_file=CSV_FILE, cache_tag="geolife_real",
                         scale=hy.sensitivity / hy.epsilon, max_users=n_traj)
     record("adaptive_hybrid", "DA-Hybrid (ours)", err, av, s, t)
 
+    print("[MIRAGE dmax=800]")
+    sys.path.insert(0, os.path.join(_BASE, "algorithms", "mirage"))
+    from mirage import MirageMechanism
+    mir = MirageMechanism(node_ids, D, prior, dmax=800, cand_size=28)
+    mir.precompute(verbose=False,
+                   cache_path=os.path.join(_HERE, "cache", f"mirage_main_{label}.json"))
+    rev = defaultdict(list)
+    for vv, (cand, probs) in mir.mech.items():
+        for oo, pp in zip(cand, probs):
+            if pp > 0:
+                rev[int(oo)].append((vv, float(pp)))
+    # snapshot adversary + utility
+    m_err, m_util, m_hit = [], [], []
+    for _, snap in snaps:
+        for uid, node in snap.items():
+            v = id_to_idx[str(node)]; o = mir.sample(v)
+            m_util.append(float(D[v, o]))
+            srcs = rev.get(o, [(v, 1.0)])
+            e, h = sadv.attack_distribution([s[0] for s in srcs],
+                                            [s[1] for s in srcs], v)
+            m_err.append(e); m_hit.append(1.0 if h else 0.0)
+    m_s = {"snapshot_adv_error_m": float(np.mean(m_err)),
+           "snapshot_reid_rate": float(np.mean(m_hit))}
+    # trajectory adversary (Viterbi with MIRAGE's known emission f(o|v))
+    Nn = len(node_ids)
+    seqs = defaultdict(list)
+    for t, (_, snap) in enumerate(traj_snaps):
+        for uid, node in snap.items():
+            v = id_to_idx[str(node)]; seqs[uid].append((v, mir.sample(v)))
+    long_u = sorted([u for u, s in seqs.items() if len(s) >= 5],
+                    key=lambda u: -len(seqs[u]))[:n_traj]
+    t_err = []
+    for u in long_u:
+        vs = [x[0] for x in seqs[u]]; os_ = [x[1] for x in seqs[u]]
+        log_em = []
+        for o in os_:
+            e = np.full(Nn, -12.0)
+            for vv, pp in rev.get(o, [(o, 1.0)]):
+                e[vv] = np.log(pp + 1e-9)
+            log_em.append(e)
+        te, _ = tadv.track(log_em, vs)
+        if te is not None:
+            t_err.append(te)
+    m_t = {"trajectory_adv_error_m": float(np.mean(t_err)) if t_err else float("nan")}
+    record("mirage", "MIRAGE (ours)", float(np.mean(m_util)), 1.0, m_s, m_t)
+
     print("[temporal cloaking k=3]")
     from temporal_cloaking import TemporalCloaker
     trajs = _build_trajectories(max_users=(30 if quick else 200),

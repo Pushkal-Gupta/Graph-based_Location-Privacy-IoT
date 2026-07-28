@@ -262,6 +262,7 @@ def _summ(errs, hits):
         "snapshot_adv_error_p95_m": float(np.percentile(errs, 95)),
         "snapshot_reid_rate": float(np.mean(hits)),
         "n_reports": int(len(errs)),
+        "_errors": errs,   # raw per-report errors (stripped before JSON persist)
     }
 
 

@@ -31,11 +31,12 @@ PAPER_FIG = os.path.join(_ROOT, "paper", "figures")
 os.makedirs(OUT, exist_ok=True)
 
 ORDER = ["k_anonymity", "differential_privacy", "graph_constrained_dp",
-         "density_aware_k_anonymity", "temporal_cloaking", "adaptive_hybrid"]
+         "density_aware_k_anonymity", "temporal_cloaking", "adaptive_hybrid", "mirage"]
 NAMES = {"k_anonymity": "k-Anonymity", "differential_privacy": "Differential Privacy",
          "graph_constrained_dp": "Graph-Constrained DP",
          "density_aware_k_anonymity": "Density-Aware k-Anon",
-         "temporal_cloaking": "Temporal Cloaking", "adaptive_hybrid": "DA-Hybrid (ours)"}
+         "temporal_cloaking": "Temporal Cloaking", "adaptive_hybrid": "DA-Hybrid (ours)",
+         "mirage": "MIRAGE (ours)"}
 NAME_TO_KEY = {v: k for k, v in NAMES.items()}
 
 

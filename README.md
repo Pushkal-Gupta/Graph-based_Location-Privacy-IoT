@@ -1,362 +1,148 @@
-# Spatio-temporal Privacy Graph-Based Approaches for Location Privacy in IoT Smart Cities
+# MIRAGE: Optimal, Road-Graph-Native Location Privacy at City Scale
 
-## Overview
+This repository accompanies the paper *"MIRAGE: Optimal, Road-Graph-Native
+Location Obfuscation at City Scale for IoT Smart Cities."* It provides a
+reproducible framework for **measuring location privacy on a common,
+adversary-grounded scale** and a new **optimal obfuscation mechanism (MIRAGE)**
+that is evaluated, for the first time, on a real road network at city scale.
 
-Smart cities rely on large-scale IoT deployments such as smartphones, connected vehicles, cameras, and environmental sensors. These devices continuously generate fine-grained spatial and temporal data that can unintentionally reveal sensitive user information such as home locations, workplaces, and detailed mobility patterns.
-
-This repository presents **graph-based spatial and temporal privacy approaches** for protecting location privacy in IoT-enabled smart cities while preserving data utility for urban analytics, traffic management, and city-scale decision-making.
-
-The project is implemented as a **completed, research-grade framework** that evaluates multiple privacy-preserving algorithms under a **common simulation and evaluation pipeline**, enabling systematic and reproducible comparison of privacy–utility tradeoffs.
-
----
-
-## Objectives
-
-- Protecting User Location and Temporal Privacy in Smart City IoT Systems
-- Prevent re-identification from spatial and mobility data
-- Maintaining the Usefulness of Location and Time Data for City-Scale Analytics
-- Demonstrate privacy–utility tradeoffs using practical simulations
-- Provide a comparative evaluation of spatial and temporal privacy mechanisms
+> **TL;DR.** Privacy is measured as the expected error of an optimal Bayesian
+> adversary (in metres), under both a *snapshot* and a *trajectory* threat model.
+> MIRAGE computes, per location, the release distribution that provably maximises
+> that error for a chosen utility budget — solved as one small linear program per
+> density-adaptive region so it scales to a real city. On a real Beijing OSM
+> network across two mobility datasets, deployed heuristics (DP, *k*-anonymity)
+> leave **9–22 % of achievable privacy on the table** at matched utility.
 
 ---
 
-## System Architecture
+## Contributions
 
-### Graph-Based Spatial Modeling
+1. **Adversary-grounded, threat-model-aware privacy metric** — expected error of
+   an optimal Bayesian adversary, evaluated under a single-observation snapshot
+   adversary and a Viterbi trajectory adversary with a Markov mobility prior. The
+   two adversaries rank mechanisms differently, so a single privacy scale is
+   inadequate. (`evaluation/adversary_priors.py`, `attacker_models.py`,
+   `run_adversarial.py`)
+2. **MIRAGE** — the first road-graph-native optimal obfuscation mechanism that
+   scales to a real city, via density-adaptive local LPs. DP and *k*-anonymity
+   are constrained/degenerate special cases. (`algorithms/mirage/`,
+   `evaluation/run_mirage.py`)
+3. **The price of heuristics** on real road networks, with 95 % bootstrap CIs and
+   an ablation. (`evaluation/run_mirage.py`, `mirage_ablation.py`)
+4. **A real-network, multi-dataset evaluation** (grid vs. real OSM graph; GeoLife
+   and T-Drive) plus an energy-model radio-sensitivity analysis.
+   (`evaluation/run_real_graph.py`, `topology_dataset_comparison.py`,
+   `energy_sensitivity.py`)
 
-- Urban space is modeled as a **graph**
-  - Nodes represent intersections or significant locations
-  - Edges represent roads or connectivity
-- User locations and movements are represented as paths over the graph
-- Privacy regions are constructed using connected subgraphs or graph-constrained perturbations
-
-### Privacy Mechanisms
-
-- **k-Anonymity**: Ensures every reported location is indistinguishable among at least _k_ users
-- **Differential Privacy**: Adds calibrated noise to location data using formal privacy guarantees
-- **Graph-Constrained Privacy**: Ensures anonymized locations respect urban topology
-- **Density and Temporal Models**: Adapt privacy strength spatially and temporally
-
----
-
-## Implemented Approaches
-
-This repository implements and evaluates **five spatio-temporal privacy-preserving algorithms**, all executed under identical datasets, metrics, and attacker assumptions.
-
----
-
-### Approach 1: Graph-Based k-Anonymity
-
-**Concept**
-
-- When a user shares a location, the system finds a connected subgraph containing at least _k_ users
-- The exact location is replaced with the centroid of this region
-- Preserves spatial realism while achieving anonymity
-
-**Key Metrics**
-
-- Location error
-- Anonymization region size
-- User coverage percentage
+The compiled paper is in [`paper/manuscript/`](paper/manuscript/)
+(`paper.tex`, `paper.pdf`).
 
 ---
 
-### Approach 2: Differential Privacy on Location Data
+## Method in one paragraph
 
-**Concept**
-
-- Adds Laplace noise to (x, y) coordinates before sharing
-- Privacy controlled via the ε (epsilon) parameter
-- Smaller ε provides stronger privacy with reduced accuracy
-
----
-
-### Approach 3: Graph-Constrained Differential Privacy
-
-**Concept**
-
-- Applies differential privacy while constraining noise to valid graph paths
-- Prevents infeasible anonymized locations outside the city topology
-- Improves utility compared to unconstrained coordinate perturbation
+For a population prior π and a utility (distortion) budget D_max, the release
+distribution `f(o|v)` maximising the optimal Bayesian adversary's error — with
+both distortion and adversary error measured as **graph shortest-path distance**
+— is a linear program (Shokri et al., CCS 2012), here instantiated natively on a
+road graph with on-graph output support. The full LP has |V|² variables and is
+intractable on a real graph; MIRAGE partitions the graph into **density-adaptive
+local regions** and solves one small LP per region, precomputed offline. An
+optional geo-indistinguishability constraint recovers a formal ε-DP guarantee
+(MIRAGE subsumes DP).
 
 ---
 
-### Approach 4: Density-Aware Adaptive k-Anonymity
-
-**Concept**
-
-- Dynamically adjusts _k_ based on local user density
-- Reduces unnecessary anonymization in sparse regions
-- Achieves a better privacy–utility balance than fixed-_k_ schemes
-
----
-
-### Approach 5: Trajectory Privacy via Temporal Cloaking
-
-**Concept**
-
-- Protects user mobility patterns across time
-- Generalizes location updates within temporal windows
-- Mitigates trajectory-based re-identification attacks
-
----
-
-## Privacy–Utility Tradeoff Analysis
-
-All approaches demonstrate the fundamental tradeoff:
-
-- **Higher privacy → Lower accuracy**
-- **Lower privacy → Higher utility**
-
-Evaluation includes:
-
-- Original vs. anonymized locations
-- Growth of anonymization regions
-- Location error vs. _k_ / ε
-- Noise distributions and trajectory distortion
-
----
-
-## Repository Structure
+## Repository layout
 
 ```text
-graph-based-location-privacy-iot/
-│
-├── README.md
-├── requirements.txt
-├── LICENSE
-├── .gitignore
-├── .gitattributes
-│
-├── data/
-│   ├── original_data/
-│   │   ├── README.md
-│   ├── processed_data/
-│   │   ├── city_graph_nodes.json
-│   │   ├── city_graph_edges.json
-│   │   └── device_locations.csv
-│   ├── processing_script/
-│   │   ├── process_geolife.py
-│   │   └── SanityCheck.ipynb
-│   └── README.md
-│
-├── algorithms/
-│   ├── k_anonymity/
-│   ├── differential_privacy/
-│   ├── graph_constrained_dp/
-│   ├── density_aware_k_anonymity/
-│   └── temporal_cloaking/
-│
-├── evaluation/
-│   ├── metrics.py
-│   ├── attacker_models.py
-│   └── evaluator.py
-│
-├── experiments/
-│   ├── run_all.py
-│   └── configs/
-│
-├── results/
-│   ├── k_anonymity/
-│   ├── differential_privacy/
-│   ├── graph_constrained_dp/
-│   ├── density_aware_k_anonymity/
-│   └── temporal_cloaking/
-│
-└── paper/
-    ├── figures/
-    ├── tables/
-    └── notes.md
+algorithms/
+  k_anonymity/                graph BFS cloaking
+  differential_privacy/       planar Laplace (geo-indistinguishability)
+  graph_constrained_dp/       Laplace + nearest-node projection
+  density-aware_k-anonymity/  adaptive-k by local density
+  temporal_cloaking/          delay-until-k temporal grouping
+  adaptive_hybrid/            DA-Hybrid (fast heuristic baseline)
+  mirage/                     MIRAGE — optimal graph-native obfuscation (LP)
+evaluation/
+  adversary_priors.py         population prior + Markov mobility model
+  attacker_models.py          snapshot + trajectory Bayesian adversaries; MatrixDistCache
+  run_adversarial.py          all mechanisms under both adversaries (grid)
+  run_mirage.py               MIRAGE analytical privacy-utility frontier + price of heuristics
+  mirage_ablation.py          MIRAGE region-size and geo-ind ablation
+  run_real_graph.py           deployment comparison on the real graph (per dataset)
+  energy_sensitivity.py       radio-technology energy sweep
+  topology_dataset_comparison.py   grid vs real vs second-dataset ranking stability
+  unified_comparison.py       master table + dual-threat / Pareto figures
+data/
+  processing_script/
+    process_geolife.py        raw GeoLife -> 30x30 grid CSV
+    build_real_graph.py       real central-Beijing OSM graph (consolidated)
+    build_osm_graph.py        generic OSM drive-graph builder (any bbox)
+    process_geolife_real.py   GeoLife GPS -> real graph nodes (map-match)
+    process_tdrive.py         T-Drive taxis -> real graph nodes
+    process_porto.py          Porto taxis -> Porto OSM graph nodes
+paper/
+  manuscript/                 the paper: paper.tex, paper.pdf, figures/
+  figures/  tables/           generated figures and LaTeX tables
 ```
 
 ---
 
-## Getting Started
-
-### Installation
+## Reproducing the results
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## Running Individual Simulations
-
-### 1. Run Graph-Based k-Anonymity Simulation
-
-Demonstrates spatial cloaking using graph-based k-anonymity.
+Datasets are **not redistributed**; the scripts download/process them. Raw GeoLife
+and T-Drive (Microsoft) and Porto (UCI #339) are fetched by the processing
+scripts into `data/original_data/`.
 
 ```bash
-python3 k_anonymity_simulation.py
-```
+# --- Graphs and data ---
+python3 data/processing_script/build_real_graph.py        # real Beijing OSM graph
+python3 data/processing_script/process_geolife_real.py    # GeoLife -> real nodes
+python3 data/processing_script/process_tdrive.py          # T-Drive -> real nodes
 
-### Outputs
-
-- `figures/k_anonymity_demo.png`
-- `figures/privacy_utility_analysis.png`
-- `results/simulation_results.json`
-
-## 2. Run Differential Privacy Simulation
-
-Demonstrates location obfuscation using the Laplace mechanism.
-
-```bash
-python3 differential_privacy_simulation.py
-```
-
-### Outputs
-
-- `figures/differential_privacy_demo.png`
-- `figures/privacy_utility_analysis.png`
-- `results/simulation_results.json`
-
-## 3. Run Graph-Constrained Differential Privacy Simulation
-
-```bash
-python3 graph_constrained_dp_simulation.py
-```
-
-### Outputs
-
-- `figures/graph_constrained_dp_demo.png`
-- `figures/privacy_utility_analysis.png`
-- `results/simulation_results.json`
-
-## 4. Run Density-Aware Adaptive k-Anonymity Simulation
-
-```bash
-python3 density_aware_k_anonymity_simulation.py
-```
-
-### Outputs
-
-- `figures/density_aware_k_anonymity_demo.png`
-- `figures/privacy_utility_analysis.png`
-- `results/simulation_results.json`
-
-## 5. Run Temporal Cloaking Simulation
-
-```bash
-python3 temporal_cloaking_simulation.py
-```
-
-### Outputs
-
-- `figures/temporal_cloaking_demo.png`
-- `figures/privacy_utility_analysis.png`
-- `results/simulation_results.json`
-
----
-
-## Running Full Experimental Suite
-
-All algorithms can be executed together using a unified runner:
-
-```bash
-python3 run_all.py
-```
-
----
-
-## Revised Evaluation Pipeline (v2)
-
-The revised evaluation adds an adversary-grounded privacy metric, a new
-density-adaptive hybrid mechanism, real road-network topology, a second dataset,
-and an energy-model sensitivity analysis. See `REVISION_NOTES.md` for the
-point-by-point response to the reviews.
-
-```bash
-# 1. New mechanism (registered in run_all.py):
-python3 algorithms/adaptive_hybrid/adaptive_hybrid_simulation.py
-
-# 2. Adversary-grounded privacy (snapshot + trajectory adversaries, in metres):
-python3 evaluation/run_adversarial.py          # -> results/<algo>/adversary.json
-
-# 3. Energy-model sensitivity across radio technologies (BLE..LTE-M):
-python3 evaluation/energy_sensitivity.py
-
-# 4. Unified comparison table + dual-threat & Pareto figures:
-python3 evaluation/unified_comparison.py       # -> paper/figures, paper/tables
-
-# 5. Real road-network topology (build graph, map-match, re-run):
-python3 data/processing_script/build_real_graph.py         # OSM Beijing graph
-python3 data/processing_script/process_geolife_real.py     # GeoLife -> real nodes
-python3 evaluation/run_real_graph.py                       # GeoLife on real graph
-
-# 6. Second dataset (T-Drive), same real graph:
-python3 data/processing_script/process_tdrive.py
+# --- Core results ---
+python3 evaluation/run_mirage.py --dataset geolife_real   # MIRAGE frontier + price of heuristics
+python3 evaluation/run_mirage.py --dataset tdrive_real
+python3 evaluation/mirage_ablation.py --dataset geolife_real
+python3 evaluation/run_real_graph.py                      # deployment comparison (GeoLife)
 python3 evaluation/run_real_graph.py --dataset tdrive
-
-# 7. Cross-topology / cross-dataset ranking-stability comparison:
+python3 evaluation/energy_sensitivity.py
 python3 evaluation/topology_dataset_comparison.py
+
+# --- Paper ---
+cd paper/manuscript && tectonic paper.tex                 # -> paper.pdf
 ```
 
----
-
-## Current Limitations
-
-- **Computational Complexity**  
-  Graph-based anonymization techniques can be computationally expensive when applied to large-scale graphs or high-density mobility datasets, limiting real-time applicability.
-
-- **Privacy–Utility Trade-off**  
-  Stronger privacy guarantees (higher _k_ in k-anonymity or lower ε in differential privacy) inherently reduce spatial accuracy and utility of the released data.
-
-- **Simplified Geographic and Mobility Constraints**  
-  Road networks, user movement patterns, and geographic constraints are abstracted for simulation purposes and may not fully capture real-world complexity.
-
-- **Synthetic Datasets**  
-  Evaluations are conducted on synthetic datasets to ensure controlled experimentation, which may differ from real-world mobility behavior.
+Outputs land in `evaluation/mirage/`, `evaluation/real_graph*/`, and `paper/`.
 
 ---
 
-## Future Directions
+## Key results
 
-- **Edge and Fog-Based Privacy Computation**  
-  Offloading anonymization and privacy-preserving computations to edge and fog nodes to reduce latency and improve scalability.
-
-- **Adaptive Graph Models for Real-Time Mobility**  
-  Dynamic graph construction and updating to reflect real-time changes in mobility patterns and network topology.
-
-- **Hybrid Privacy Mechanisms**  
-  Combining k-anonymity, differential privacy, temporal cloaking, and graph constraints to achieve stronger and more flexible privacy guarantees.
-
-- **AI-Driven Privacy–Utility Optimization**  
-  Leveraging machine learning and optimization techniques to automatically balance privacy and utility based on application requirements.
-
-- **Integration with Real-World IoT Sensor Streams**  
-  Extending the framework to support live data from GPS-enabled devices, smart city sensors, and mobile IoT platforms.
+- **Price of heuristics** (real graph, matched utility): MIRAGE gives **+13–22 %**
+  (GeoLife) and **+9–17 %** (T-Drive) more privacy than the best heuristic in the
+  practical distortion regime; it is Pareto-optimal (privacy ≈ utility) up to the
+  network's intrinsic uncertainty ceiling.
+- **Threat models matter**: density-aware and temporal cloaking swap privacy rank
+  between the snapshot and trajectory adversaries.
+- **Availability is dataset-density-driven**, not mechanism-intrinsic: on dense
+  T-Drive every mechanism reaches 100 % availability; on sparse GeoLife
+  *k*-anonymity and density-aware suffer denial of service.
+- **Radio energy dominance is radio-dependent** (6–50 % under BLE vs. 99 % under
+  cellular IoT).
 
 ---
 
-## Research Context
+## Citation
 
-This project aligns with active research areas including:
-
-- Spatial cloaking
-- Graph-based anonymization
-- Differential privacy
-- Privacy-preserving IoT architectures for smart cities
-
-The repository is designed as a **research-oriented and extensible foundation**, making it suitable for:
-
-- Academic coursework and capstone projects
-- Simulation-based experimentation
-- Publication-quality empirical research
-
----
-
-## Research Contributions
-
-- A **comparative framework** for evaluating multiple spatial privacy algorithms
-- Implementations of **graph-based anonymization** and **differential privacy mechanisms**
-- **Quantitative privacy–utility evaluation metrics** for systematic comparison
-- **Clear visualizations** illustrating the effects of anonymization techniques
-- A **modular and extensible codebase** to support further research and experimentation
-
----
+If you use this framework, please cite the paper (see `paper/manuscript/`).
 
 ## License
 
-This project is licensed under the **Apache License 2.0**.
-
-You may use, modify, and distribute this software in compliance with the license terms.  
-See the `LICENSE` file for full details.
+Apache License 2.0 — see [`LICENSE`](LICENSE).
