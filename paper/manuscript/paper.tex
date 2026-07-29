@@ -421,6 +421,41 @@ radio-dependent, not universal.}
 \label{fig:energy}
 \end{figure}
 
+\subsection{Snapshot-Optimality Is Not Trajectory-Optimality}
+\label{sec:traj}
+MIRAGE is optimal against the \emph{snapshot} adversary. Does that carry over to
+the \emph{trajectory} adversary? We stress-test this, and the answer---honestly---
+is no, for an instructive reason. We evaluate a filtering trajectory adversary
+(mobility-propagated belief, updated per release) on real user traces
+(Fig.~\ref{fig:traj}). At matched distortion, \emph{differential privacy is the
+most trajectory-private mechanism}, above both MIRAGE variants (e.g., at
+$800$\,m distortion the tracking error is $676$\,m for DP vs.\ $\sim$578\,m for
+MIRAGE). The cause is structural: MIRAGE's density-adaptive region
+partition---the very device that makes it scalable and snapshot-optimal---means
+each release lies in a fixed region, so \emph{observing it reveals region
+membership}, which the sequential adversary exploits. DP's diffuse, unpartitioned
+noise leaks less across time.
+
+We also built a trajectory-aware variant, \textbf{MIRAGE-T}, that solves each
+release against the adversary's mobility-propagated belief rather than the static
+prior (receding-horizon optimal control). MIRAGE-T shifts along the frontier but
+does \emph{not} beat snapshot-MIRAGE at matched utility ($\sim$578 vs.\ $577$\,m
+at $800$\,m distortion): the region-membership leak dominates the within-region
+belief concentration it exploits. This is a clean instance of the paper's thesis
+that \emph{privacy is threat-model dependent}---here even for an optimal
+mechanism---and it identifies the key open problem: a \emph{scalable} graph
+mechanism jointly optimal against snapshot and trajectory adversaries, e.g.\ via
+soft or overlapping regions that do not reveal membership.
+
+\begin{figure}[t]\centering
+\includegraphics[width=0.95\columnwidth]{fig_trajectory_geolife_real.png}
+\caption{Trajectory adversary (GeoLife, real traces). At matched distortion DP is
+the most trajectory-private; MIRAGE's region partition leaks membership, and the
+mobility-aware MIRAGE-T does not close the gap. Snapshot-optimality does not imply
+trajectory-optimality.}
+\label{fig:traj}
+\end{figure}
+
 % =====================================================================
 \section{Discussion}
 \label{sec:discussion}
@@ -434,11 +469,12 @@ at a small, measured cost.
 
 \textbf{Limitations (honest).} (i)~At high distortion the local-region cap ($C$)
 bounds MIRAGE's reach, so heuristics catch up near the uncertainty ceiling;
-hierarchical or overlapping regions would extend the advantage. (ii)~The
-optimal-mechanism LP is per-snapshot; the trajectory adversary shows temporal
-correlation still leaks, and a fully trajectory-optimal MIRAGE (optimising the
-sequential adversary via a mobility-corrected objective) is promising future
-work---the ``sequential estimation'' the name anticipates. (iii)~Absolute error
+hierarchical or overlapping regions would extend the advantage. (ii)~MIRAGE is
+snapshot-optimal, not trajectory-optimal: Section~\ref{sec:traj} shows its
+scalability partition leaks region membership, so a diffuse mechanism (DP) is
+more trajectory-robust, and the belief-aware MIRAGE-T does not close the gap. A
+scalable graph mechanism jointly optimal against both adversaries---likely via
+membership-hiding soft/overlapping regions---is the key open problem. (iii)~Absolute error
 is graph-granularity dependent, so cross-topology conclusions rest on
 adversary-privacy and availability. (iv)~The energy model is analytical, suited
 to ranking; we report its radio sensitivity explicitly.
