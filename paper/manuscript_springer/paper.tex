@@ -1,45 +1,29 @@
-%% =====================================================================
-%% MIRAGE: Optimal, Road-Graph-Native Location Obfuscation at City Scale,
-%% and a Threat-Model-Aware Privacy Metric for IoT Smart Cities.
-%% IEEE Computer Society journal format. Self-contained; figures in ./figures/.
-%% Compile: tectonic paper.tex
-%% =====================================================================
-\documentclass[10pt,journal,compsoc]{IEEEtran}
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=2.4cm]{geometry}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{graphicx}
-\usepackage{textcomp}
 \usepackage{booktabs}
 \usepackage{multirow}
 \usepackage{url}
-\usepackage{cite}
 \usepackage{algorithmic}
 \usepackage{algorithm}
 \usepackage{array}
 \usepackage{xcolor}
 \usepackage{mathptmx}
+\usepackage{authblk}
+\usepackage[font=small,labelfont=bf]{caption}
 \usepackage[hidelinks]{hyperref}
 \graphicspath{{figures/}}
-\hyphenation{op-tical net-works semi-conduc-tor IoT geo-in-dis-tin-guish-a-bil-i-ty}
 \newcommand{\dG}{d_{G}}
+\setlength{\parskip}{2pt}
 \begin{document}
-
-\title{MIRAGE: Optimal, Road-Graph-Native Location Obfuscation at City Scale for
-IoT Smart Cities}
-
-\author{Pushkal~Gupta,
-        M.~Nagasai~Dattu,
-        and~S.~Ebenezer~Juliet%
-\IEEEcompsocitemizethanks{
-\IEEEcompsocthanksitem The authors are with the School of Computer Science and
-Engineering, Vellore Institute of Technology, Vellore 632014, India.\protect\\
-E-mail: pushkalgupta2005@gmail.com; ebenezer.juliet@vit.ac.in.
-\IEEEcompsocthanksitem Corresponding author: Pushkal Gupta.}%
-\thanks{Manuscript prepared July 2026.}}
-
-\markboth{IEEE Transactions on Mobile Computing,~Vol.~XX, No.~XX, Month~2026}%
-{Gupta \MakeLowercase{\textit{et al.}}: Optimal Road-Graph-Native Location Obfuscation for IoT Smart Cities}
-
-\IEEEtitleabstractindextext{%
+\title{\bfseries MIRAGE: Optimal, Road-Graph-Native Location Obfuscation at City Scale for IoT Smart Cities}
+\author[]{Pushkal Gupta}
+\author[]{M.\ Nagasai Dattu}
+\author[]{S.\ Ebenezer Juliet}
+\affil[]{School of Computer Science and Engineering, Vellore Institute of Technology, Vellore 632014, India. \quad Corresponding author: pushkalgupta2005@gmail.com}
+\date{}
+\maketitle
 \begin{abstract}
 IoT smart cities depend on continuous location reporting, and a large family of
 obfuscation mechanisms---$k$-anonymity, differential privacy (DP), graph
@@ -72,20 +56,15 @@ against a sequential adversary a diffuse mechanism can be more robust, which
 identifies the key open problem. The complete framework is released for
 reproducibility.
 \end{abstract}
-\begin{IEEEkeywords}
-Location privacy, optimal obfuscation, Bayesian adversary, differential privacy,
-$k$-anonymity, road networks, trajectory privacy, linear programming, Internet of
-Things, smart cities.
-\end{IEEEkeywords}}
-\maketitle
-\IEEEdisplaynontitleabstractindextext
-\IEEEpeerreviewmaketitle
+\noindent\textbf{Keywords:} Location privacy, optimal obfuscation, Bayesian adversary, differential privacy, $k$-anonymity, road networks, trajectory privacy, linear programming, Internet of Things, smart cities.
+\bigskip
+
 
 % =====================================================================
 \section{Introduction}
 \label{sec:intro}
 % =====================================================================
-\IEEEPARstart{S}{mart} cities instrument roads, vehicles, and people with IoT
+Smart cities instrument roads, vehicles, and people with IoT
 devices that report location continuously for analytics, traffic management, and
 emergency response. The same reports expose homes, workplaces, health-facility
 visits, and detailed mobility, even after identifiers are stripped
@@ -354,7 +333,7 @@ therefore mis-ranks mechanisms that defend different threats---motivating both t
 two-threat metric and, later, an honest trajectory analysis of MIRAGE itself.
 
 \begin{figure}[t]\centering
-\includegraphics[width=0.95\columnwidth]{fig_dual_threat.png}
+\includegraphics[width=0.95\linewidth]{fig_dual_threat.png}
 \caption{Privacy is threat-model dependent: mechanisms rank differently under the
 snapshot ($x$) and trajectory ($y$) adversaries; points off the diagonal are
 protected asymmetrically.}
@@ -475,7 +454,7 @@ $150$--$500$\,m regime on GeoLife---that fraction of their distortion is wasted 
 DP and $k$-anonymity. The gap closes only past $\sim$$1100$\,m, where all saturate.
 
 \begin{figure}[t]\centering
-\includegraphics[width=0.98\columnwidth]{fig_frontier_geolife_real.png}
+\includegraphics[width=0.98\linewidth]{fig_frontier_geolife_real.png}
 \caption{Privacy--utility frontier (GeoLife, real graph, $95\%$ CI). MIRAGE
 (optimal) dominates the heuristics; the vertical gap to MIRAGE is the price of
 heuristics. All converge at the intrinsic uncertainty ceiling.}
@@ -506,7 +485,7 @@ MIRAGE is Pareto-optimal and dominant everywhere; only the magnitude varies, whi
 we now explain.
 
 \begin{figure}[t]\centering
-\includegraphics[width=0.98\columnwidth]{fig_frontier_porto_real.png}
+\includegraphics[width=0.98\linewidth]{fig_frontier_porto_real.png}
 \caption{Cross-city check on the real Porto (Portugal) network under the taxi
 dataset. MIRAGE dominates here too ($+5$--$12\%$).}
 \label{fig:frontier_porto}
@@ -545,7 +524,7 @@ Porto   & 0.74 & 0.87 & 0.19 & 10\% \\
 \end{table}
 
 \begin{figure}[t]\centering
-\includegraphics[width=0.85\columnwidth]{fig_mobility_gap.png}
+\includegraphics[width=0.85\linewidth]{fig_mobility_gap.png}
 \caption{The optimal-mechanism advantage tracks within-region prior heterogeneity
 across cities: more concentrated occupancy, larger gain.}
 \label{fig:mobility}
@@ -635,7 +614,7 @@ Porto (Portugal)  & 699 & 1904 & 100\% & 798 \\
 \end{table}
 
 \begin{figure}[t]\centering
-\includegraphics[width=\columnwidth]{fig_cross_topology.png}
+\includegraphics[width=\linewidth]{fig_cross_topology.png}
 \caption{Availability and error across the grid, the real graph (GeoLife), and the
 real graph under T-Drive. Availability rises to $100\%$ for all mechanisms on the
 dense dataset---it is density-driven.}
@@ -674,7 +653,7 @@ snapshot and trajectory adversaries, plausibly via soft or overlapping regions
 whose releases do not reveal membership.
 
 \begin{figure}[t]\centering
-\includegraphics[width=0.95\columnwidth]{fig_trajectory_geolife_real.png}
+\includegraphics[width=0.95\linewidth]{fig_trajectory_geolife_real.png}
 \caption{Trajectory adversary (GeoLife, real traces). At matched distortion DP is
 most trajectory-private; MIRAGE's region partition leaks membership, and the
 mobility-aware MIRAGE-T does not close the gap.}
@@ -695,7 +674,7 @@ release-time cost is a single categorical draw ($O(1)$), so it is as
 radio-dominated as DP; its LP cost is paid once, offline.
 
 \begin{figure}[t]\centering
-\includegraphics[width=0.95\columnwidth]{fig_energy_sensitivity.png}
+\includegraphics[width=0.95\linewidth]{fig_energy_sensitivity.png}
 \caption{Radio share of per-report energy vs.\ radio technology. Radio dominance
 is radio-dependent, not universal.}
 \label{fig:energy}

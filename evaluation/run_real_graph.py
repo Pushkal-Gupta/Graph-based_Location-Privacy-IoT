@@ -100,19 +100,19 @@ def std_metrics(mech, snapshots, kind, k=None):
 
 
 def run(quick=False, csv_file=CSV_FILE, cache_tag="geolife_real",
-        out_dir=_OUT, label="GeoLife"):
+        out_dir=_OUT, label="GeoLife", nodes_file=NODES_FILE, edges_file=EDGES_FILE):
     os.makedirs(out_dir, exist_ok=True)
     n_snap = 8 if quick else 50
     n_traj = 10 if quick else 40
     max_rows = 1_000_000 if quick else None
 
     print(f"[{label}] Loading real graph + building shared distance matrix...")
-    node_ids, id_to_idx, coords = load_node_index(NODES_FILE)
-    with open(NODES_FILE) as f:
+    node_ids, id_to_idx, coords = load_node_index(nodes_file)
+    with open(nodes_file) as f:
         nodes_json = json.load(f)
-    with open(EDGES_FILE) as f:
+    with open(edges_file) as f:
         edges_json = json.load(f)
-    D = AM.build_graph_distance_matrix(NODES_FILE, EDGES_FILE, id_to_idx).astype(np.float32)
+    D = AM.build_graph_distance_matrix(nodes_file, edges_file, id_to_idx).astype(np.float32)
     print(f"  {len(node_ids)} nodes, distance matrix {D.shape} ({D.nbytes/1e6:.0f} MB)")
 
     prior, T = estimate_prior_and_transitions(csv_file, node_ids, id_to_idx,
@@ -273,7 +273,7 @@ if __name__ == "__main__":
     import argparse
     ap = argparse.ArgumentParser()
     ap.add_argument("--quick", action="store_true")
-    ap.add_argument("--dataset", choices=["geolife", "tdrive"], default="geolife")
+    ap.add_argument("--dataset", choices=["geolife", "tdrive", "porto"], default="geolife")
     args = ap.parse_args()
     if args.dataset == "tdrive":
         run(quick=args.quick,
@@ -281,5 +281,13 @@ if __name__ == "__main__":
             cache_tag="tdrive_real",
             out_dir=os.path.join(_HERE, "real_graph_tdrive"),
             label="T-Drive")
+    elif args.dataset == "porto":
+        run(quick=args.quick,
+            csv_file=os.path.join(_PROC, "device_locations_porto.csv"),
+            cache_tag="porto_real",
+            out_dir=os.path.join(_HERE, "real_graph_porto"),
+            label="Porto",
+            nodes_file=os.path.join(_PROC, "porto_graph_nodes.json"),
+            edges_file=os.path.join(_PROC, "porto_graph_edges.json"))
     else:
         run(quick=args.quick)
