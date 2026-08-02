@@ -452,6 +452,11 @@ prior). Table~\ref{tab:price} quantifies the gap: at matched utility MIRAGE
 delivers $+13$ to $+22\%$ more privacy than the best heuristic in the
 $150$--$500$\,m regime on GeoLife---that fraction of their distortion is wasted by
 DP and $k$-anonymity. The gap closes only past $\sim$$1100$\,m, where all saturate.
+A region-level paired bootstrap ($113$ regions) confirms the advantage is
+statistically significant, not confidence-interval overlap: at matched utility
+($\sim$$500$\,m) MIRAGE is more private than DP by $+118$\,m (95\% CI
+$[+109,+128]$, one-sided $p<0.001$) and than $k$-anonymity by $+97$\,m
+($[+65,+126]$, $p<0.001$).
 
 \begin{figure}[t]\centering
 \includegraphics[width=0.98\linewidth]{fig_frontier_geolife_real.png}
@@ -545,6 +550,26 @@ guarantee---quantifying the price of that guarantee within one framework. All
 precomputes complete in seconds to tens of seconds on a laptop for a $\sim$3\,k
 node city, and release is $O(1)$, so MIRAGE is deployable.
 
+\textbf{How much does the decomposition cost?} We measure it exactly on a small
+graph where the global $|V|^2$ LP is solvable: we compute the true global optimum
+(one LP over all nodes) and the local decomposition, both scored by the exact
+optimal-adversary metric (Fig.~\ref{fig:optgap}). In the operationally relevant
+regime the decomposition is \emph{essentially lossless}---mean privacy gap $1.5\%$
+for distortion $\le 500$\,m, $0\%$ up to $300$\,m---so MIRAGE's measured dominance
+is genuinely near-globally-optimal. A gap appears only at high distortion
+($28$--$44\%$ at $D_{\max}\ge 800$), where the global optimum releases across
+regions but the partition confines releases; but that is the saturated regime
+where all mechanisms converge to the uncertainty ceiling and the advantage has
+already vanished.
+
+\begin{figure}[t]\centering
+\includegraphics[width=0.85\linewidth]{fig_optimality_gap.png}
+\caption{The scalable local decomposition matches the global LP optimum in the
+practical regime (mean gap $1.5\%$ for distortion $\le 500$\,m), diverging only at
+high distortion where all mechanisms saturate.}
+\label{fig:optgap}
+\end{figure}
+
 \begin{table}[t]\centering
 \caption{MIRAGE ablation (GeoLife, real graph). Privacy at $D_{\max}{=}800$\,m and
 whole-graph precompute time vs.\ region size $C$.}
@@ -622,7 +647,33 @@ dense dataset---it is density-driven.}
 \end{figure}
 
 % =====================================================================
-\section{Results V: Trajectory Adversary --- an Honest Limit}
+\section{Results V: Robustness to a Misspecified Prior}
+\label{sec:robust}
+% =====================================================================
+MIRAGE exploits the prior $\pi$, which a deployer must \emph{estimate} from
+finite, possibly stale data. Does its advantage survive an imperfect estimate? We
+solve MIRAGE with a corrupted prior $\hat\pi=(1-\alpha)\pi+\alpha\,\mathbf{u}$
+($\mathbf{u}$ uniform, $\alpha$ the degree of ignorance: $0$ perfect, $1$ no prior
+at all) while the adversary attacks with the true $\pi$
+(Fig.~\ref{fig:robust}). MIRAGE remains the most private for $\alpha\lesssim0.25$;
+a deployer estimating occupancy from the same data operates far below this
+crossover. Under \emph{severe} misspecification ($\alpha\ge0.5$), however, MIRAGE
+can fall \emph{below} the prior-free heuristics---it optimises for the wrong
+distribution while the adversary uses the right one. This is an honest
+deployment caveat and a precise one: the optimal mechanism is only as good as its
+prior, motivating a distributionally-robust variant (optimising the worst case
+over a prior-uncertainty set) as future work.
+
+\begin{figure}[t]\centering
+\includegraphics[width=0.85\linewidth]{fig_prior_robustness.png}
+\caption{Robustness to prior misspecification. MIRAGE stays above the best
+prior-free heuristic while the prior is reasonably accurate ($\alpha\lesssim0.25$);
+a badly wrong prior can make it underperform.}
+\label{fig:robust}
+\end{figure}
+
+% =====================================================================
+\section{Results VI: Trajectory Adversary --- an Honest Limit}
 \label{sec:traj}
 % =====================================================================
 MIRAGE is optimal against the snapshot adversary. Does that carry to the
@@ -660,8 +711,32 @@ mobility-aware MIRAGE-T does not close the gap.}
 \label{fig:traj}
 \end{figure}
 
+\textbf{Can we un-leak the membership? A structural tension.} We tested the
+natural fix directly: replace the single hard partition with a random
+\emph{mixture} of two overlapping partitions, so a release can originate from
+either partition's region and no longer reveals one region
+(Fig.~\ref{fig:soft}). It helps only marginally---by $+2$ to $+7\%$ on the mobile
+T-Drive traces and slightly \emph{hurts} on the stationary GeoLife ones---and in
+neither case does it close the gap to DP (at $\sim$$800$\,m distortion,
+$527$--$564$\,m for MIRAGE variants vs.\ $669$\,m for DP). The lesson is that the
+tension is \emph{structural}: light de-partitioning is insufficient, because the
+same local region structure that yields snapshot-optimality inherently
+concentrates releases; matching DP's trajectory-robustness appears to require
+genuinely diffuse support, which sacrifices the snapshot optimality. A mechanism
+that is jointly optimal for both threats---perhaps a many-partition ensemble or a
+continuous-support graph LP---remains the central open problem this analysis
+sharpens.
+
+\begin{figure}[t]\centering
+\includegraphics[width=0.85\linewidth]{fig_soft_region.png}
+\caption{Attempting to close the trajectory gap with soft (two-partition) regions.
+It helps marginally on mobile data and not at all on stationary data; DP remains
+more trajectory-robust---the membership-leak tension is structural.}
+\label{fig:soft}
+\end{figure}
+
 % =====================================================================
-\section{Results VI: Energy-Model Sensitivity}
+\section{Results VII: Energy-Model Sensitivity}
 \label{sec:energy}
 % =====================================================================
 Per-report energy is $E=E_{\mathrm{radio}}+E_{\mathrm{comp}}+E_{\mathrm{retrans}}$,
@@ -705,6 +780,9 @@ trajectory adversary and can only lower reported trajectory privacy---so our
 trajectory numbers are, if anything, optimistic for all mechanisms. (iv)~The local
 decomposition caps MIRAGE's reach at high distortion, where heuristics catch up at
 the uncertainty ceiling; hierarchical regions would extend the advantage.
+(v)~MIRAGE's optimality is prior-conditioned (Section~\ref{sec:robust}): a badly
+misspecified prior can erase its advantage, so a deployer must estimate occupancy
+reasonably well or use a distributionally-robust variant.
 
 \textbf{Ethical use.} The framework is defensive: it helps operators release less
 information for a given utility, and it exposes when a mechanism is weaker than its
