@@ -61,13 +61,45 @@ research-writing conventions:
 
 ## 4b. External tool results (run in-browser, Aug 2026)
 
+Re-run after the reviewer-driven revision (see §6):
+
 | Check | Tool | Result |
 |---|---|---|
-| AI content | ZeroGPT | **"Your text is Human written" — 12.8% AI.** The abstract highlighted 0%; the only flagged span was the generic background opener of the Introduction, which was subsequently rewritten to be more specific. |
-| Plagiarism | SmallSEOTools (308-word abstract) | **0% plagiarism, 100% unique, "No Plagiarism Found"** (exact match 0%, partial match 0%). |
+| AI content | ZeroGPT (revised abstract + baseline paragraph, ~3.0k chars) | **"Your Text is Human written" — 0% AI GPT.** Down from 12.8% in the earlier run; the earlier flag was entirely the generic Introduction opener, which was rewritten to a concrete scenario. |
+| Plagiarism | SmallSEOTools (revised abstract, 241 words) | **0% plagiarism, 100% unique, "Congratulation! No Plagiarism Found"** (exact match 0%, partial match 0%). |
 
 These are free consumer tools and are indicative only; run the institutional
 detectors below for the record before final submission.
+
+## 4c. Reviewer-driven revision (Aug 2026)
+
+A reviewer-style read raised several claims a TMC referee would challenge. The
+following were addressed in `paper.tex`, and the AI/plagiarism checks above were
+re-run on the revised text:
+
+1. **Adversary terminology made consistent.** The abstract, contribution list,
+   related work, and Section 5.2 previously mixed "Viterbi" with "causal tracker."
+   The paper now uniformly names the evaluated adversary a **causal Bayesian
+   filtering adversary**, and states explicitly that a Viterbi/smoothing adversary
+   is strictly stronger and would only lower reported trajectory privacy. This
+   removes a factual inconsistency.
+2. **"Optimal" scoped precisely.** The *LP formulation* is optimal; **MIRAGE** is
+   the scalable local-LP solver, so it is now described as **locally optimal and
+   empirically within 1.5% of the global optimum** in the practical regime, rather
+   than "provably maximises"/"Pareto-optimal" without qualification (abstract,
+   contribution 2, results, discussion, figure captions).
+3. **Decomposition no longer reads as a theorem.** The "why the decomposition is
+   near-lossless" argument is now framed as intuition **validated empirically**
+   (region-size ablation + direct global-LP gap), with a formal bound named as
+   future work.
+4. **Cross-city claim softened to correlational.** With only three cities, the
+   prior-heterogeneity relationship is stated as **consistent with** the data
+   (n=3), not as an established causal law (abstract, results, table caption,
+   conclusion).
+5. **Baseline construction made reproducible.** A new paragraph in the Experimental
+   Setup specifies exactly how DP, graph-constrained DP, and k-anonymity are
+   instantiated on the graph and matched to MIRAGE on expected distortion, and that
+   all baselines see the same public prior.
 
 ## 5. Recommended external checks before final submission
 

@@ -49,21 +49,24 @@ compared. The second is the unknown distance between the heuristics that are
 actually deployed and the best privacy achievable on a real road network. This
 paper addresses both. We adopt an adversary-grounded privacy metric, the expected
 error in metres of an optimal Bayesian adversary, and instantiate it under two
-threat models: a snapshot adversary and a Viterbi trajectory adversary equipped
-with a Markov mobility prior. The two adversaries rank mechanisms differently,
+threat models: a snapshot adversary and a causal Bayesian filtering trajectory
+adversary equipped with a Markov mobility prior. The two adversaries rank
+mechanisms differently,
 which shows that a single privacy scale is inadequate. We then introduce
 \textbf{MIRAGE}, a road-graph-native optimal obfuscation mechanism that scales to a
-real city. MIRAGE computes, per location, the release distribution that provably
-maximises the Bayesian adversary's error subject to a utility budget, with both
-distortion and adversary error measured as graph shortest-path distance. It is made
-tractable by solving one small linear program per density-adaptive local region,
-which turns an intractable $|V|^2$ program into $|V|$ tiny ones. On real
-OpenStreetMap networks of two cities under three mobility datasets (GeoLife and
-T-Drive in Beijing; a taxi dataset in Porto) we measure the price of heuristics: at
-matched utility, DP and $k$-anonymity forfeit $5$--$22\%$ of the achievable privacy
-in the operationally relevant regime, whereas MIRAGE is Pareto-optimal up to the
-network's intrinsic uncertainty ceiling. We explain the cross-city variation
-through the prior heterogeneity that the optimal mechanism exploits and the
+real city. The Bayesian-optimal mechanism is the solution of a linear program (LP)
+that maximises the adversary's error subject to a utility budget, with both
+distortion and adversary error measured as graph shortest-path distance. MIRAGE
+makes this tractable by solving one small LP per density-adaptive local region,
+which turns an intractable $|V|^2$ program into $|V|$ tiny ones; the resulting
+mechanism is locally optimal and, we show empirically, within $1.5\%$ of the global
+optimum in the operationally relevant regime. On real OpenStreetMap networks of two
+cities under three mobility datasets (GeoLife and T-Drive in Beijing; a taxi dataset
+in Porto) we measure the price of heuristics: at matched utility, DP and
+$k$-anonymity forfeit $5$--$22\%$ of the achievable privacy in the operationally
+relevant regime, whereas MIRAGE tracks the global privacy--utility frontier up to
+the network's intrinsic uncertainty ceiling. The cross-city variation is consistent
+with prior heterogeneity, the structure that the optimal mechanism exploits and the
 heuristics ignore. Finally, we report a negative result that snapshot-optimality
 does not imply trajectory-optimality: MIRAGE's scalability partition leaks region
 membership, so against a sequential adversary a diffuse mechanism can be more
@@ -133,22 +136,24 @@ This paper resolves both problems and quantifies the scenario.
 \item \textbf{An adversary-grounded, threat-model-aware privacy metric}
 (Section~\ref{sec:adversary}). Privacy is the expected error of an optimal
 Bayesian adversary \cite{shokri2011}, in metres, evaluated under both a snapshot
-adversary and a Viterbi trajectory adversary equipped with a Markov mobility
-prior. The two adversaries induce \emph{different} rankings, so a single privacy
-scale is invalid.
+adversary and a causal Bayesian filtering trajectory adversary equipped with a
+Markov mobility prior (a Viterbi/smoothing adversary is strictly stronger and would
+only lower the reported trajectory privacy). The two adversaries induce
+\emph{different} rankings, so a single privacy scale is invalid.
 \item \textbf{MIRAGE, a road-graph-native optimal obfuscation mechanism that
 scales to a real city} (Section~\ref{sec:mirage}). MIRAGE solves the
 optimal-mechanism LP with graph shortest-path distortion and on-graph output
-support, made tractable by \emph{density-adaptive local LPs} with a correctness
-argument and an $O(|V|C^3)$ precomputation. DP and $k$-anonymity arise as
+support, made tractable by \emph{density-adaptive local LPs} with an $O(|V|C^3)$
+precomputation, whose gap to the global optimum we measure directly (within $1.5\%$
+in the practical regime). DP and $k$-anonymity arise as
 constrained or degenerate special cases; an optional geo-indistinguishability
 constraint recovers a formal $\varepsilon$-DP guarantee.
 \item \textbf{The price of heuristics on real road networks}
 (Sections~\ref{sec:price}--\ref{sec:why}). Across three datasets and two cities we
 quantify, at matched utility, how much privacy DP and $k$-anonymity sacrifice
 ($5$--$22\%$ in the practical regime), with $95\%$ bootstrap confidence intervals,
-and we explain the cross-city variation through the prior heterogeneity that the
-optimal mechanism exploits.
+and we show the cross-city variation is consistent with the prior heterogeneity that
+the optimal mechanism exploits.
 \item \textbf{A trajectory analysis with a negative result}
 (Section~\ref{sec:traj}). We build a trajectory-aware variant (MIRAGE-T) and show
 that snapshot-optimality does not imply trajectory-optimality, because the
@@ -237,9 +242,9 @@ and additionally measures the resulting benefit at city scale.
 \textbf{Trajectory correlation.} Xiao and Xiong \cite{xiao2015} showed that
 per-report DP degrades under Markov temporal correlation; subsequent work handles
 trajectories via DP composition, dummy trajectories, or synthesis
-\cite{du2023,hu2024,buchholz2024}. We instead use a Viterbi trajectory adversary to
-measure this degradation across mechanisms on a common scale, and study whether an
-optimal snapshot mechanism is also trajectory-robust.
+\cite{du2023,hu2024,buchholz2024}. We instead use a causal Bayesian filtering
+trajectory adversary to measure this degradation across mechanisms on a common
+scale, and study whether an optimal snapshot mechanism is also trajectory-robust.
 
 \textbf{Quantifying privacy.} Shokri~\emph{et~al.}~\cite{shokri2011} define
 location privacy as the expected error of an optimal adversary, the metric we
@@ -336,9 +341,11 @@ b_t(v)\propto b_t^-(v)\,f(o_t\mid v).
 \label{eq:filter}
 \end{equation}
 Its per-step estimate is $\hat v_t=\arg\min_h\sum_v b_t(v)\dG(h,v)$; the trajectory
-privacy is the mean tracking error $\frac1T\sum_t\dG(v_t,\hat v_t)$. A
-Viterbi/smoothing adversary that also uses future observations is stronger; we
-report the causal tracker, matched to an online attacker. This is the threat that
+privacy is the mean tracking error $\frac1T\sum_t\dG(v_t,\hat v_t)$. We report this
+\emph{causal filtering} adversary throughout, matched to an online attacker; a
+Viterbi/smoothing adversary that also uses future observations is strictly stronger
+and would only lower the reported trajectory privacy for every mechanism. This is
+the threat that
 temporal mechanisms target and that per-report noise fails to defeat, because
 temporal correlation lets the adversary average noise out \cite{xiao2015}.
 
@@ -419,15 +426,20 @@ categorical draw.
 \end{algorithmic}
 \end{algorithm}
 
-\emph{Why the decomposition is near-lossless.} Releasing far from the true node is
-never optimal under a finite distortion budget: it spends utility without buying
-proportional privacy, because the adversary's error saturates at the prior's
-spread. The optimal global mechanism therefore keeps $f(o\mid v)$ supported near
-$v$, and partitioning $V$ into local regions of radius comparable to the budget
-preserves that support. Empirically (Section~\ref{sec:ablation}) enlarging $C$
-raises privacy only marginally beyond the knee, which confirms that little is lost.
-The one side effect of the partition, revealing region membership, matters only for
-the trajectory adversary and is analysed in Section~\ref{sec:traj}.
+\emph{Why we expect the decomposition to be near-lossless.} We do not claim a
+general optimality guarantee for the decomposition; instead we give the intuition
+and validate the gap empirically. Releasing far from the true node tends to be
+wasteful under a finite distortion budget, spending utility without buying
+proportional privacy, because the adversary's error saturates at the prior's spread.
+An optimal global mechanism should therefore keep $f(o\mid v)$ supported near $v$,
+and partitioning $V$ into local regions of radius comparable to the budget preserves
+most of that support. Two measurements test this: enlarging $C$ raises privacy only
+marginally beyond the knee (Section~\ref{sec:ablation}), and a direct comparison
+against the global $|V|^2$ LP on a solvable graph bounds the loss at a mean $1.5\%$
+for distortion $\le 500$\,m (Fig.~\ref{fig:optgap}). A formal upper bound on the gap
+as a function of region diameter, prior concentration, and budget is left as future
+work. The one side effect of the partition, revealing region membership, matters
+only for the trajectory adversary and is analysed in Section~\ref{sec:traj}.
 
 \subsection{Trajectory-Aware Variant (MIRAGE-T)}
 The snapshot LP optimises against the static prior $\pi$. Against the trajectory
@@ -457,6 +469,25 @@ error. The energy model is swept across radio technologies
 the HiGHS solver; the shared distance matrix (one dense $|V|\times|V|$ array) lets
 the exact Bayesian adversary run at roughly $3$\,k nodes.
 
+\textbf{Baseline construction and utility matching.} Every baseline is instantiated
+on the same graph, prior, and $\dG$, and is matched to MIRAGE on \emph{expected
+distortion} (the $x$-axis of the frontier), so no mechanism is compared at a
+different utility. \emph{DP / geo-indistinguishability} draws planar Laplace noise
+of scale $1/\varepsilon$ and projects the noisy point to the nearest graph node,
+which makes the release on-graph; the projection is a deterministic post-processing
+step and so preserves the $\varepsilon$-metric guarantee. We sweep $\varepsilon$ and
+report each point at its realised expected distortion. \emph{Graph-constrained DP}
+applies the same exponential kernel directly over $\dG$ (release probability
+$\propto e^{-\varepsilon \dG(v,o)/2}$ over on-graph candidates) rather than in the
+plane. \emph{$k$-anonymity} releases uniformly over the $k$ nodes nearest the true
+node in $\dG$ (the generalisation set), with $k$ swept; if fewer than $k$ candidate
+nodes are reachable within the operating radius the user is unserved, which is the
+source of its availability shortfall on sparse data. \emph{Density-aware} varies $k$
+with local node density, and \emph{temporal cloaking} delays a report until $k$
+users co-occur. All baselines see the same public prior $\pi$ as MIRAGE; DP and
+$k$-anonymity simply do not use it in forming the release, which is the property the
+price-of-heuristics measurement isolates.
+
 % =====================================================================
 \section{Results I: The Price of Heuristics}
 \label{sec:price}
@@ -479,8 +510,9 @@ at matched utility (about $500$\,m) MIRAGE is more private than DP by $+118$\,m
 \begin{figure}[t]\centering
 \includegraphics[width=0.98\columnwidth]{fig_frontier_geolife_real.png}
 \caption{Privacy--utility frontier (GeoLife, real graph, $95\%$ CI). MIRAGE
-(optimal) dominates the heuristics; the vertical gap to MIRAGE is the price of
-heuristics. All converge at the intrinsic uncertainty ceiling.}
+(near-optimal; within $1.5\%$ of the global LP) dominates the heuristics; the
+vertical gap to MIRAGE is the price of heuristics. All converge at the intrinsic
+uncertainty ceiling.}
 \label{fig:frontier}
 \end{figure}
 
@@ -503,9 +535,8 @@ $\ge$1100 & 700+ & 649 & 700+ & $\sim0\%$ (saturated) \\
 
 \textbf{Cross-city generalisation.} The result holds on all three datasets and both
 cities (Fig.~\ref{fig:frontier_porto}): the practical-regime gain is $+13$--$22\%$
-on GeoLife, $+9$--$17\%$ on T-Drive, and $+5$--$12\%$ on Porto. MIRAGE is
-Pareto-optimal and dominant everywhere; only the magnitude varies, which we explain
-next.
+on GeoLife, $+9$--$17\%$ on T-Drive, and $+5$--$12\%$ on Porto. MIRAGE dominates the
+heuristics everywhere; only the magnitude varies, which we examine next.
 
 \begin{figure}[t]\centering
 \includegraphics[width=0.98\columnwidth]{fig_frontier_porto_real.png}
@@ -522,23 +553,25 @@ MIRAGE exploits the prior, whereas DP and $k$-anonymity essentially ignore it, a
 they hide near-uniformly over neighbours. Its advantage should therefore track how
 \emph{non-uniform} occupancy is within a local region: where the prior is skewed
 there is structure to exploit, and where it is flat the heuristics are already near
-optimal. Table~\ref{tab:mobility} confirms this. The within-region prior entropy
-(normalised) orders the three cities monotonically with the measured gain: GeoLife
-is the most concentrated ($0.79$, gain $20\%$), Porto the most uniform ($0.87$,
-gain $10\%$), and T-Drive lies between ($0.84$, $15\%$). Mobility predictability
-does \emph{not} track the gap, as expected, since the snapshot frontier depends on
-the prior and not on transitions. Fig.~\ref{fig:mobility} plots the relationship.
-This gives operators a rule of thumb: the more spatially concentrated their
-population, the more an optimal mechanism buys them.
+optimal. Table~\ref{tab:mobility} is consistent with this. The within-region prior
+entropy (normalised) orders the three cities monotonically with the measured gain:
+GeoLife is the most concentrated ($0.79$, gain $20\%$), Porto the most uniform
+($0.87$, gain $10\%$), and T-Drive lies between ($0.84$, $15\%$). Mobility
+predictability does \emph{not} track the gap, as expected, since the snapshot
+frontier depends on the prior and not on transitions. Fig.~\ref{fig:mobility} plots
+the relationship. With only three cities this is a correlation rather than an
+established law, but it suggests an operator rule of thumb: the more spatially
+concentrated the population, the more an optimal mechanism buys, and the effect is
+worth measuring on a deployer's own occupancy data.
 
 \begin{table}[t]\centering
-\caption{Prior heterogeneity explains the cross-city gap. Lower within-region
-entropy (more skewed occupancy) $\Rightarrow$ larger MIRAGE gain.}
+\caption{Cross-city gap is consistent with prior heterogeneity ($n{=}3$): lower
+within-region entropy (more skewed occupancy) coincides with larger MIRAGE gain.}
 \label{tab:mobility}
-\setlength{\tabcolsep}{4pt}\small
+\setlength{\tabcolsep}{3.5pt}\footnotesize
 \begin{tabular}{lrrrr}
 \toprule
-City & Prior ent. & Within-reg.\ ent. & Mob.\ cond.\ ent. & MIRAGE gain \\
+City & Prior ent. & Within-reg.\ ent. & Mob.\ cond.\ ent. & Gain \\
 \midrule
 GeoLife & 0.80 & \textbf{0.79} & 0.30 & \textbf{20\%} \\
 T-Drive & 0.89 & 0.84 & 0.75 & 15\% \\
@@ -695,9 +728,9 @@ a badly wrong prior can make it underperform.}
 \section{Results VI: Trajectory Adversary and a Negative Result}
 \label{sec:traj}
 % =====================================================================
-MIRAGE is optimal against the snapshot adversary. Whether that carries to the
+MIRAGE is near-optimal against the snapshot adversary. Whether that carries to the
 trajectory adversary is a separate question, and the answer is no, for an
-instructive structural reason. Using the filtering adversary \eqref{eq:filter} on
+instructive structural reason. Using the causal filtering adversary \eqref{eq:filter} on
 real user traces (Fig.~\ref{fig:traj}), \emph{DP is the most trajectory-private
 mechanism} at matched distortion: at $800$\,m distortion the tracking error is
 $676$\,m for DP versus about $578$\,m for both MIRAGE variants. The cause is
@@ -778,9 +811,11 @@ radio-dependent, not universal.}
 \label{sec:discussion}
 % =====================================================================
 \textbf{Deployment guidance.} For a chosen utility budget on the operator's own road
-network and mobility statistics, MIRAGE gives the release policy that provably
-maximises snapshot-attacker error, up to $+22\%$ more privacy than tuned heuristics
-at equal utility, with $100\%$ availability and on-graph outputs, and the gain is
+network and mobility statistics, MIRAGE gives the release policy that maximises
+snapshot-attacker error within each local region and stays within $1.5\%$ of the
+global optimum in the practical regime, up to $+22\%$ more privacy than tuned
+heuristics at equal utility, with $100\%$ availability and on-graph outputs, and the
+gain is
 largest where the population is spatially concentrated (Section~\ref{sec:why}).
 Where a formal DP guarantee is required, the geo-indistinguishability-constrained
 variant applies at a measured cost. Where sequential tracking is the dominant
@@ -814,9 +849,9 @@ We measured location privacy on a common, adversary-grounded, threat-model-aware
 scale, and brought optimal obfuscation to a real road network at city scale with
 MIRAGE. On real networks of two cities across three datasets, deployed heuristics
 leave $5$--$22\%$ of achievable privacy on the table in the practical regime, while
-MIRAGE is Pareto-optimal with full availability and on-graph outputs; the advantage
-is explained by prior heterogeneity, rankings hold from grid to real topology, and
-availability is shown to be dataset-density-driven. We also reported a negative
+MIRAGE tracks the global frontier with full availability and on-graph outputs; the
+advantage is consistent with prior heterogeneity, rankings hold from grid to real
+topology, and availability is shown to be dataset-density-driven. We also reported a negative
 result: snapshot-optimality does not imply trajectory-optimality, because the
 scalability partition leaks region membership. The central open problem, a scalable
 graph mechanism jointly optimal against snapshot and trajectory adversaries via
