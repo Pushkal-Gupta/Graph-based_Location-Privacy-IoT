@@ -316,7 +316,7 @@ python3 algorithms/density-aware_k-anonymity/density_aware_k_anonymity_simulatio
 
 ---
 
-**Author:** Praagya Garg  
+**Author:** Pushkal Gupta  
 **Context:** IoT Smart Cities Privacy Research  
 **Dataset:** Microsoft GeoLife GPS Trajectory Dataset  
 **Date:** January 2026

@@ -430,6 +430,6 @@ This work is part of the broader "Spatio-temporal Privacy Graph-Based Approaches
 
 ---
 
-**Author:** Naga Sai Dattu  
+**Author:** Pushkal Gupta  
 **Context:** IoT Smart Cities Privacy Research  
 **Date:** February 2026

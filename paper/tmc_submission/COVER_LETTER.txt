@@ -1,0 +1,68 @@
+Cover Letter
+
+To: The Editor-in-Chief
+    IEEE Transactions on Mobile Computing
+
+Subject: Submission of "MIRAGE: Optimal, Road-Graph-Native Location Obfuscation
+         at City Scale for IoT Smart Cities"
+
+Dear Editor,
+
+Please find enclosed our manuscript, "MIRAGE: Optimal, Road-Graph-Native Location
+Obfuscation at City Scale for IoT Smart Cities," which we submit for consideration
+as a regular paper in the IEEE Transactions on Mobile Computing.
+
+Continuous location reporting is fundamental to IoT smart cities, yet the many
+obfuscation mechanisms proposed to protect it are scored on incompatible,
+family-specific scales, and none of the classical optimal-mechanism results has
+ever been instantiated on a real road network at city scale. Our manuscript
+addresses both gaps.
+
+The main contributions are:
+
+1. An adversary-grounded, threat-model-aware privacy metric measured in metres as
+   the expected error of an optimal Bayesian adversary, instantiated under both a
+   snapshot adversary and a Viterbi trajectory adversary with a Markov mobility
+   prior. We show the two adversaries rank mechanisms differently, so a single
+   privacy scale is inadequate.
+
+2. MIRAGE, a road-graph-native optimal obfuscation mechanism that scales to a real
+   city by solving one small linear program per density-adaptive local region,
+   reducing an intractable O(|V|^2) program to |V| small ones. We validate that the
+   decomposition is within 1.5% of the global optimum in the operationally relevant
+   regime.
+
+3. The first measurement of the "price of heuristics" on real OpenStreetMap
+   networks of two cities (Beijing and Porto) under three mobility datasets
+   (GeoLife, T-Drive, Porto taxi): at matched utility, differential privacy and
+   k-anonymity forfeit 5-22% of achievable privacy, with statistical significance
+   established by a paired region-level bootstrap (p < 0.001).
+
+4. An explanation of the cross-city variation in terms of prior heterogeneity, and
+   a reported negative result: snapshot-optimality does not imply
+   trajectory-optimality, because the scalability partition leaks region
+   membership. This isolates a well-defined open problem.
+
+The complete framework, code, processed graphs, and figure-generation scripts are
+released for reproducibility at:
+https://github.com/Pushkal-Gupta/Graph-based-Location-Privacy-IoT
+
+We confirm that this manuscript is our original work, has not been published
+elsewhere, and is not under concurrent consideration by any other venue. All
+sources of the datasets and prior methods (in particular the optimal-mechanism
+formulations of Shokri et al. and Bordenabe et al.) are explicitly cited, and our
+contribution over that prior work is stated plainly in the introduction and related
+work.
+
+The authors declare no conflict of interest.
+
+Thank you for considering our submission. We look forward to the reviewers'
+feedback.
+
+Sincerely,
+
+Pushkal Gupta (corresponding author)
+S. Ebenezer Juliet
+School of Computer Science and Engineering
+Vellore Institute of Technology, Vellore 632014, India
+E-mail: pushkalgupta2005@gmail.com
